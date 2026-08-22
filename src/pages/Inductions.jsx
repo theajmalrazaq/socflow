@@ -92,6 +92,12 @@ export function Inductions() {
   const outlet = useOutletContext();
   const access = outlet?.permissions;
 
+  useEffect(() => {
+    if (access && !canManageInductions(access)) {
+      navigateto("/no-permission");
+    }
+  }, [access, navigateto]);
+
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [teamFilter, setTeamFilter] = useState("all");
@@ -745,15 +751,12 @@ export function Inductions() {
 
   return (
     <>
-      {access ? (
-        canManageInductions(access) ? (
-          <>
-            {loading ? (
-              <div className="min-h-screen flex items-center justify-center">
-                <Loading />
-              </div>
-            ) : (
-              <div className="w-full flex flex-col items-start px-2 py-4">
+      {loading ? (
+        <div className="min-h-screen flex items-center justify-center">
+          <Loading />
+        </div>
+      ) : (
+        <div className="w-full flex flex-col items-start px-2 py-4">
                 {/* Search & Filters */}
                 <div className="w-full flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
                   <div className="relative w-full sm:w-80 md:w-96 max-w-md">
@@ -1417,23 +1420,6 @@ export function Inductions() {
                 </div>
               </div>
             )}
-          </>
-        ) : (
-          <div className="min-h-screen flex items-center justify-center">
-            <div className="text-center">
-              <h1 className="text-2xl font-bold mb-2">Access Denied</h1>
-              <p className="text-muted-foreground">You do not have permission to view this page.</p>
-              <Button className="mt-4" onClick={() => navigateto("/")}>
-                Go to Dashboard
-              </Button>
-            </div>
-          </div>
-        )
-      ) : (
-        <div className="min-h-screen flex items-center justify-center">
-          <Loading />
-        </div>
-      )}
 
       {/* Interview Scheduling Dialog */}
       <Dialog open={isInterviewDialogOpen} onOpenChange={setIsInterviewDialogOpen}>

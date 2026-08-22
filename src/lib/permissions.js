@@ -1,5 +1,5 @@
 /**
- * Default permission matrix template with nested page list & sub-permission toggles.
+ * Full permission matrix with all permissions enabled (used as template/defaults).
  */
 export const DEFAULT_PERMISSIONS = {
   dashboard: {
@@ -75,44 +75,15 @@ export const DEFAULT_PERMISSIONS = {
   },
 };
 
-export const ROLE_PRESETS = {
-  ADMIN: "admin",
-  EVENT_MANAGER: "event_manager",
-  READ_ONLY: "read_only",
-  CUSTOM: "custom",
-};
-
-export const EVENT_MANAGER_PRESET = {
-  dashboard: { enabled: true, sub: { viewStats: true, quickSettings: false } },
-  events: DEFAULT_PERMISSIONS.events,
-  leads: {
-    enabled: false,
-    sub: {
-      readOnly: false,
-      changeStatus: false,
-      addMember: false,
-      deleteLead: false,
-      exportData: false,
-    },
-  },
-  inductions: {
-    enabled: false,
-    sub: { readOnly: false, changeStatus: false, sendEmails: false, deleteResponse: false },
-  },
-  members: {
-    enabled: false,
-    sub: { readOnly: false, changeStatus: false, deleteMember: false, exportData: false },
-  },
-  emails: DEFAULT_PERMISSIONS.emails,
-  users: { enabled: false, sub: { createUser: false, editRole: false, deleteUser: false } },
-};
-
-export const READ_ONLY_PRESET = {
-  dashboard: { enabled: true, sub: { viewStats: true, quickSettings: false } },
+/**
+ * Empty permission matrix with all permissions disabled.
+ */
+export const NO_PERMISSIONS = {
+  dashboard: { enabled: false, sub: { viewStats: false, quickSettings: false } },
   events: {
-    enabled: true,
+    enabled: false,
     sub: {
-      viewRegistrations: true,
+      viewRegistrations: false,
       createEvent: false,
       editEvent: false,
       deleteEvent: false,
@@ -132,11 +103,21 @@ export const READ_ONLY_PRESET = {
   },
   inductions: {
     enabled: false,
-    sub: { readOnly: false, changeStatus: false, sendEmails: false, deleteResponse: false },
+    sub: {
+      readOnly: false,
+      changeStatus: false,
+      sendEmails: false,
+      deleteResponse: false,
+    },
   },
   members: {
     enabled: false,
-    sub: { readOnly: false, changeStatus: false, deleteMember: false, exportData: false },
+    sub: {
+      readOnly: false,
+      changeStatus: false,
+      deleteMember: false,
+      exportData: false,
+    },
   },
   emails: {
     enabled: false,
@@ -148,110 +129,95 @@ export const READ_ONLY_PRESET = {
       manageSettings: false,
     },
   },
-  users: { enabled: false, sub: { createUser: false, editRole: false, deleteUser: false } },
+  users: {
+    enabled: false,
+    sub: {
+      createUser: false,
+      editRole: false,
+      deleteUser: false,
+    },
+  },
+  analytics: {
+    enabled: false,
+    sub: {
+      viewCharts: false,
+      exportReports: false,
+    },
+  },
 };
 
+/**
+ * Parse permissions matrix from database record (object or JSON string).
+ */
 export function parsePermissions(permInput) {
-  if (!permInput) return DEFAULT_PERMISSIONS;
+  if (!permInput) return NO_PERMISSIONS;
 
-  let obj = null;
-  if (typeof permInput === "object" && permInput !== null) {
-    obj = permInput;
-  } else if (typeof permInput === "string") {
+  let raw = permInput;
+  if (typeof raw === "string") {
     try {
-      const parsed = JSON.parse(permInput);
-      if (typeof parsed === "object" && parsed !== null) {
-        obj = parsed;
-      }
-    } catch {}
+      raw = JSON.parse(raw);
+    } catch {
+      return NO_PERMISSIONS;
+    }
   }
 
-  if (obj) {
+  if (typeof raw === "object" && raw !== null) {
+    // If wrapped in a user object e.g. { permissions: { ... } }
+    if (raw.permissions && typeof raw.permissions === "object") {
+      raw = raw.permissions;
+    }
+
+    const mergeSection = (key) => {
+      const section = raw[key] || {};
+      const defaultSub = NO_PERMISSIONS[key]?.sub || {};
+      const currentSub = section.sub || {};
+      return {
+        enabled: Boolean(section.enabled),
+        sub: {
+          ...defaultSub,
+          ...currentSub,
+        },
+      };
+    };
+
     return {
-      dashboard: {
-        ...DEFAULT_PERMISSIONS.dashboard,
-        ...obj.dashboard,
-        sub: { ...DEFAULT_PERMISSIONS.dashboard?.sub, ...obj.dashboard?.sub },
-      },
-      events: {
-        ...DEFAULT_PERMISSIONS.events,
-        ...obj.events,
-        sub: { ...DEFAULT_PERMISSIONS.events?.sub, ...obj.events?.sub },
-      },
-      leads: {
-        ...DEFAULT_PERMISSIONS.leads,
-        ...obj.leads,
-        sub: { ...DEFAULT_PERMISSIONS.leads?.sub, ...obj.leads?.sub },
-      },
-      inductions: {
-        ...DEFAULT_PERMISSIONS.inductions,
-        ...obj.inductions,
-        sub: { ...DEFAULT_PERMISSIONS.inductions?.sub, ...obj.inductions?.sub },
-      },
-      members: {
-        ...DEFAULT_PERMISSIONS.members,
-        ...obj.members,
-        sub: { ...DEFAULT_PERMISSIONS.members?.sub, ...obj.members?.sub },
-      },
-      emails: {
-        ...DEFAULT_PERMISSIONS.emails,
-        ...obj.emails,
-        sub: { ...DEFAULT_PERMISSIONS.emails?.sub, ...obj.emails?.sub },
-      },
-      users: {
-        ...DEFAULT_PERMISSIONS.users,
-        ...obj.users,
-        sub: { ...DEFAULT_PERMISSIONS.users?.sub, ...obj.users?.sub },
-      },
-      analytics: {
-        ...DEFAULT_PERMISSIONS.analytics,
-        ...obj.analytics,
-        sub: { ...DEFAULT_PERMISSIONS.analytics?.sub, ...obj.analytics?.sub },
-      },
+      dashboard: mergeSection("dashboard"),
+      events: mergeSection("events"),
+      leads: mergeSection("leads"),
+      inductions: mergeSection("inductions"),
+      members: mergeSection("members"),
+      emails: mergeSection("emails"),
+      users: mergeSection("users"),
+      analytics: mergeSection("analytics"),
     };
   }
 
-  const isFullAdmin = permInput === "admin" || permInput === "full" || permInput === "RnVsbA==";
-  const isEventManager = permInput === "event_manager" || permInput === "Y29udGVudF9vbmx5";
-  const isReadOnly =
-    permInput === "read_only" ||
-    permInput === "registrations_only" ||
-    permInput === "cmVnaXN0cmF0aW9uc19vbmx5";
-
-  if (isFullAdmin) return DEFAULT_PERMISSIONS;
-  if (isEventManager) return EVENT_MANAGER_PRESET;
-  if (isReadOnly) return READ_ONLY_PRESET;
-
-  return DEFAULT_PERMISSIONS;
+  return NO_PERMISSIONS;
 }
 
 /**
- * Check if user is an Admin
+ * Check if user has admin privileges (i.e. permission to manage users).
  */
 export function isAdmin(permInput) {
-  if (!permInput) return false;
-  if (permInput === "admin" || permInput === "full" || permInput === "RnVsbA==") return true;
-  if (typeof permInput === "object" && permInput?.role === "admin") return true;
-  return false;
+  return hasPermission(permInput, "users");
 }
 
 /**
- * Check page & sub-permission access dynamically
+ * Check dynamic page & function access from permissions matrix.
  */
 export function hasPermission(permInput, pageKey, subKey = null) {
   if (!permInput) return false;
-  if (isAdmin(permInput)) return true;
 
-  const p = parsePermissions(permInput);
-  const pagePerm = p?.[pageKey];
+  const matrix = parsePermissions(permInput);
+  const pagePerm = matrix?.[pageKey];
 
-  if (!pagePerm || pagePerm.enabled === false) return false;
+  if (!pagePerm || !pagePerm.enabled) return false;
   if (!subKey) return true;
 
   return Boolean(pagePerm.sub?.[subKey]);
 }
 
-// Backward-compatible export helper aliases
+// Helper functions for specific pages and functions
 export function canManageEvents(permInput) {
   return hasPermission(permInput, "events");
 }

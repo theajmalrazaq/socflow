@@ -14,7 +14,6 @@ import {
   Calendar,
   UserCog,
   SlidersHorizontal,
-  Eye,
   ChevronDown,
   ChevronRight,
   Filter,
@@ -52,10 +51,10 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import Loading from "@/components/layout/Loading";
 import {
   isAdmin,
   DEFAULT_PERMISSIONS,
+  NO_PERMISSIONS,
   parsePermissions,
   canManageUsers,
   hasPermission,
@@ -149,7 +148,6 @@ function PermissionForm({
   matrixSetter,
   togglePageMaster,
   toggleSubPermission,
-  applyPreset,
 }) {
   const [expanded, setExpanded] = useState({
     dashboard: true,
@@ -170,38 +168,34 @@ function PermissionForm({
 
   return (
     <div className="space-y-4 max-h-[500px] overflow-y-auto pr-1 py-1">
-      {/* Quick Presets Bar */}
-      <div className="p-4 rounded-xl bg-background/50 border border-border/50 backdrop-blur-md mb-4">
-        <Label className="text-xs font-bold text-muted-foreground uppercase tracking-wider block mb-2.5">
-          Quick Permission Presets
-        </Label>
-        <div className="flex flex-wrap gap-2">
+      {/* Quick Actions Bar */}
+      <div className="p-3.5 rounded-xl bg-background/50 border border-border/50 backdrop-blur-md mb-4 flex items-center justify-between">
+        <div>
+          <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider block">
+            Functional Access Toggles
+          </span>
+          <span className="text-[11px] text-muted-foreground">
+            Configure specific pages and capabilities for this user
+          </span>
+        </div>
+        <div className="flex items-center gap-2">
           <Button
             type="button"
             variant="outline"
             size="sm"
-            className="h-9 text-xs gap-1.5 rounded-lg border-purple-500/30 hover:bg-purple-500/10 text-purple-400"
-            onClick={() => applyPreset(matrixSetter, "admin")}
+            className="h-8 text-xs gap-1.5 rounded-lg border-primary/30 hover:bg-primary/10 text-primary"
+            onClick={() => matrixSetter(DEFAULT_PERMISSIONS)}
           >
-            <Shield className="w-3.5 h-3.5" /> Admin (All ON)
+            <Check className="w-3.5 h-3.5" /> Select All
           </Button>
           <Button
             type="button"
             variant="outline"
             size="sm"
-            className="h-9 text-xs gap-1.5 rounded-lg border-blue-500/30 hover:bg-blue-500/10 text-blue-400"
-            onClick={() => applyPreset(matrixSetter, "event_manager")}
+            className="h-8 text-xs gap-1.5 rounded-lg border-border hover:bg-muted/50 text-muted-foreground"
+            onClick={() => matrixSetter(NO_PERMISSIONS)}
           >
-            <Calendar className="w-3.5 h-3.5" /> Event Manager
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            className="h-9 text-xs gap-1.5 rounded-lg border-emerald-500/30 hover:bg-emerald-500/10 text-emerald-400"
-            onClick={() => applyPreset(matrixSetter, "read_only")}
-          >
-            <Eye className="w-3.5 h-3.5" /> Read Only
+            Clear All
           </Button>
         </div>
       </div>
@@ -374,7 +368,7 @@ export function Users() {
   // Redirect users without user management permission
   useEffect(() => {
     if (access && !canManageUsers(access)) {
-      navigate("/nopermission");
+      navigate("/no-permission");
     }
   }, [access, navigate]);
 
@@ -419,82 +413,6 @@ export function Users() {
     });
   };
 
-  // Presets
-  const applyPreset = (matrixSetter, presetType) => {
-    if (presetType === "admin") {
-      matrixSetter(DEFAULT_PERMISSIONS);
-    } else if (presetType === "event_manager") {
-      matrixSetter({
-        dashboard: { enabled: true, sub: { viewStats: true, quickSettings: false } },
-        events: DEFAULT_PERMISSIONS.events,
-        leads: {
-          enabled: false,
-          sub: {
-            readOnly: false,
-            changeStatus: false,
-            addMember: false,
-            deleteLead: false,
-            exportData: false,
-          },
-        },
-        inductions: {
-          enabled: false,
-          sub: { readOnly: false, changeStatus: false, sendEmails: false, deleteResponse: false },
-        },
-        members: {
-          enabled: false,
-          sub: { readOnly: false, changeStatus: false, deleteMember: false, exportData: false },
-        },
-        emails: DEFAULT_PERMISSIONS.emails,
-        users: { enabled: false, sub: { createUser: false, editRole: false, deleteUser: false } },
-      });
-    } else if (presetType === "read_only") {
-      matrixSetter({
-        dashboard: { enabled: true, sub: { viewStats: true, quickSettings: false } },
-        events: {
-          enabled: true,
-          sub: {
-            viewRegistrations: true,
-            createEvent: false,
-            editEvent: false,
-            deleteEvent: false,
-            selectWinners: false,
-            generateCertificates: false,
-          },
-        },
-        leads: {
-          enabled: true,
-          sub: {
-            readOnly: true,
-            changeStatus: false,
-            addMember: false,
-            deleteLead: false,
-            exportData: false,
-          },
-        },
-        inductions: {
-          enabled: true,
-          sub: { readOnly: true, changeStatus: false, sendEmails: false, deleteResponse: false },
-        },
-        members: {
-          enabled: true,
-          sub: { readOnly: true, changeStatus: false, deleteMember: false, exportData: false },
-        },
-        emails: {
-          enabled: true,
-          sub: {
-            viewResponses: true,
-            changeStatus: false,
-            sendEmail: false,
-            deleteEmail: false,
-            manageSettings: false,
-          },
-        },
-        users: { enabled: false, sub: { createUser: false, editRole: false, deleteUser: false } },
-      });
-    }
-  };
-
   // Step Navigation for Create User Modal
   const handleNextStep = () => {
     if (!newUser.name?.trim() || !newUser.email?.trim() || !newUser.password?.trim()) {
@@ -530,7 +448,7 @@ export function Users() {
 
   // Handle Edit User
   const handleOpenEdit = (user) => {
-    setEditingUser(user);
+    setEditingUser({ ...user, role: user.role || "Member" });
     const existingMatrix = parsePermissions(user.permissions || user.role);
     setEditPermissions(existingMatrix);
   };
@@ -541,7 +459,7 @@ export function Users() {
       await updateUserMutation.mutateAsync({
         id: editingUser.id,
         permissions: editPermissions,
-        role: editingUser.role || "custom",
+        role: editingUser.role || "Member",
       });
       setEditingUser(null);
     } catch {}
@@ -559,15 +477,16 @@ export function Users() {
   const filteredUsers = usersList.filter((u) => {
     const term = search.toLowerCase();
     const matchesSearch =
-      u.name?.toLowerCase().includes(term) || u.email?.toLowerCase().includes(term);
+      u.name?.toLowerCase().includes(term) ||
+      u.email?.toLowerCase().includes(term) ||
+      u.role?.toLowerCase().includes(term);
 
-    const userIsAdmin = isAdmin(u.permissions || u.role);
-    const matchesRole =
-      roleFilter === "all" ||
-      (roleFilter === "admin" && userIsAdmin) ||
-      (roleFilter === "custom" && !userIsAdmin);
-
-    return matchesSearch && matchesRole;
+    if (!matchesSearch) return false;
+    if (roleFilter === "all") return true;
+    if (roleFilter === "admin") {
+      return (u.role || "").toLowerCase().includes("admin") || isAdmin(u.permissions);
+    }
+    return true;
   });
 
   const getInitials = (nameStr) => {
@@ -595,7 +514,7 @@ export function Users() {
         <div className="relative w-full sm:w-80 md:w-96 max-w-md">
           <Search className="absolute z-10 left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
           <Input
-            placeholder="Search users by name or email..."
+            placeholder="Search users by name, email, or role..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="pl-10 h-11 bg-background/60 backdrop-blur-xl border-border/50"
@@ -607,10 +526,10 @@ export function Users() {
               <Button size="lg" variant="outline" className="h-11 gap-2 inline-flex items-center">
                 <Filter className="h-4 w-4 mr-2" />
                 {roleFilter === "all"
-                  ? "Filter Roles"
+                  ? "Filter Users"
                   : roleFilter === "admin"
-                    ? "Admin Only"
-                    : "Custom Roles"}
+                    ? "Admins"
+                    : "All Users"}
                 <ChevronDown className="w-4 h-4 ml-2" />
               </Button>
             </DropdownMenuTrigger>
@@ -618,9 +537,6 @@ export function Users() {
               <DropdownMenuLabel>Filter Users</DropdownMenuLabel>
               <DropdownMenuItem onClick={() => setRoleFilter("all")}>All Users</DropdownMenuItem>
               <DropdownMenuItem onClick={() => setRoleFilter("admin")}>Admins</DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setRoleFilter("custom")}>
-                Custom Permissions
-              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
 
@@ -657,8 +573,6 @@ export function Users() {
           <div className="rounded-2xl bg-background/60 border border-border/50 backdrop-blur-xl w-full">
             <ul className="divide-y divide-border/50">
               {filteredUsers.map((user) => {
-                const userIsAdmin = isAdmin(user.permissions || user.role);
-
                 return (
                   <li
                     key={user.id || user.email}
@@ -677,17 +591,10 @@ export function Users() {
                         <h3 className="font-semibold text-lg md:text-xl line-clamp-1 text-foreground">
                           {user.name || "Unnamed User"}
                         </h3>
-                        {userIsAdmin ? (
-                          <div className="ml-1 px-2.5 py-0.5 rounded-full bg-purple-600/10 text-purple-300 text-xs font-semibold flex items-center gap-1 border border-purple-600/20">
-                            <Shield className="w-3 h-3" />
-                            Admin
-                          </div>
-                        ) : (
-                          <div className="ml-1 px-2.5 py-0.5 rounded-full bg-blue-600/10 text-blue-300 text-xs font-semibold flex items-center gap-1 border border-blue-600/20">
-                            <SlidersHorizontal className="w-3 h-3" />
-                            Custom Permissions
-                          </div>
-                        )}
+                        <div className="ml-1 px-2.5 py-0.5 rounded-full bg-primary/10 text-primary text-xs font-semibold flex items-center gap-1 border border-primary/20">
+                          <Shield className="w-3 h-3" />
+                          {user.role || "Member"}
+                        </div>
                       </div>
 
                       <div className="mt-2 text-xs text-muted-foreground flex flex-wrap items-center gap-4">
@@ -829,6 +736,20 @@ export function Users() {
                 </div>
 
                 <div className="space-y-1.5">
+                  <Label htmlFor="role">Role / Designation</Label>
+                  <div className="relative">
+                    <Shield className="w-4 h-4 text-muted-foreground absolute left-3.5 top-1/2 -translate-y-1/2 z-10 pointer-events-none" />
+                    <Input
+                      id="role"
+                      placeholder="e.g. President, Media Lead, Event Coordinator"
+                      value={newUser.role}
+                      onChange={(e) => setNewUser({ ...newUser, role: e.target.value })}
+                      className="pl-10 h-11 bg-background/60 backdrop-blur-xl border-border/50"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-1.5">
                   <Label htmlFor="password">Initial Password</Label>
                   <div className="relative">
                     <Lock className="w-4 h-4 text-muted-foreground absolute left-3.5 top-1/2 -translate-y-1/2 z-10 pointer-events-none" />
@@ -852,7 +773,6 @@ export function Users() {
                   matrixSetter={setPermissionMatrix}
                   togglePageMaster={togglePageMaster}
                   toggleSubPermission={toggleSubPermission}
-                  applyPreset={applyPreset}
                 />
               </div>
             )}
@@ -908,22 +828,35 @@ export function Users() {
               <div className="p-2 rounded-xl bg-primary/10 text-primary border border-primary/20">
                 <SlidersHorizontal className="w-5 h-5" />
               </div>
-              Configure User Toggles
+              Configure User Permissions & Role
             </DialogTitle>
             <DialogDescription className="text-muted-foreground">
-              Modify page list & sub-permission toggles for {editingUser?.name} (
+              Modify role designation and functional permissions for {editingUser?.name} (
               {editingUser?.email})
             </DialogDescription>
           </DialogHeader>
 
           {editingUser && (
             <div className="space-y-4 pt-2">
+              <div className="space-y-1.5 pb-2">
+                <Label htmlFor="edit-role">Role / Designation</Label>
+                <div className="relative">
+                  <Shield className="w-4 h-4 text-muted-foreground absolute left-3.5 top-1/2 -translate-y-1/2 z-10 pointer-events-none" />
+                  <Input
+                    id="edit-role"
+                    placeholder="e.g. President, Tech Lead, Event Organizer"
+                    value={editingUser.role || ""}
+                    onChange={(e) => setEditingUser({ ...editingUser, role: e.target.value })}
+                    className="pl-10 h-11 bg-background/60 backdrop-blur-xl border-border/50"
+                  />
+                </div>
+              </div>
+
               <PermissionForm
                 currentMatrix={editPermissions}
                 matrixSetter={setEditPermissions}
                 togglePageMaster={togglePageMaster}
                 toggleSubPermission={toggleSubPermission}
-                applyPreset={applyPreset}
               />
             </div>
           )}

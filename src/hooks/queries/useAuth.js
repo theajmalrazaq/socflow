@@ -15,34 +15,43 @@ export function useUserSession() {
       if (authError || !user) {
         return {
           user: null,
-          permissions: "RnVsbA==",
+          role: null,
+          permissions: null,
           isAuthenticated: false,
         };
       }
 
       let userData = {
+        id: user.id,
         name: user.user_metadata?.name || user.email?.split("@")[0] || "User",
         email: user.email || "",
+        role: user.user_metadata?.role || "Member",
       };
-      let permissions = localStorage.getItem("user-permissions") || "RnVsbA==";
+
+      let permissions = null;
 
       try {
-        const { data: users } = await supabase
+        const { data: users, error: dbError } = await supabase
           .from("users")
           .select("*")
           .or(`user_id.eq.${user.id},userId.eq.${user.id},email.eq.${user.email}`);
 
+        if (dbError) {
+          console.warn("Could not fetch user record from db:", dbError);
+        }
+
         if (users && users.length > 0) {
           const u = users[0];
+          const userRole = u.role || user.user_metadata?.role || "Member";
           userData = {
             id: u.id,
+            userId: u.user_id || u.userId || user.id,
             name: u.name || user.user_metadata?.name || user.email?.split("@")[0] || "User",
             email: user.email || u.email || "",
-            role: u.role || "admin",
+            role: userRole,
+            society_id: u.society_id || null,
           };
-          const rawPerm = u.permissions || u.role;
-          permissions = typeof rawPerm === "object" ? JSON.stringify(rawPerm) : String(rawPerm);
-          localStorage.setItem("user-permissions", permissions);
+          permissions = u.permissions || null;
         }
       } catch (err) {
         console.error("Error loading user profile in session query:", err);
@@ -50,6 +59,7 @@ export function useUserSession() {
 
       return {
         user: userData,
+        role: userData.role,
         permissions,
         isAuthenticated: true,
       };
@@ -65,11 +75,9 @@ export function useLogoutMutation() {
     mutationFn: async () => {
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
-      localStorage.removeItem("user-permissions");
     },
     onSuccess: () => {
       queryClient.clear();
     },
   });
 }
-

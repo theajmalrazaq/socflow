@@ -36,6 +36,7 @@ import {
 } from "lucide-react";
 import { sendBulkEmails } from "@/lib/emailService.jsx";
 import { useCreateEventMutation } from "@/hooks/queries/useEvents";
+import { canManageEvents, hasPermission } from "@/lib/permissions";
 import { Calendar as DateCalendar } from "@/components/ui/calendar";
 import {
   Select,
@@ -54,6 +55,12 @@ export function NewEvent() {
   const access = outlet?.permissions;
   const descriptionRef = useRef(null);
   const createEventMutation = useCreateEventMutation();
+
+  useEffect(() => {
+    if (access && !canManageEvents(access) && !hasPermission(access, "events", "createEvent")) {
+      navigateto("/no-permission");
+    }
+  }, [access, navigateto]);
 
   const [title, setTitle] = useState("");
   const [date, setDate] = useState(undefined);
@@ -266,9 +273,7 @@ export function NewEvent() {
   };
 
   return (
-    <>
-      {access === "Y29udGVudF9vbmx5" || access === "RnVsbA==" ? (
-        <div className="w-full flex flex-col items-start px-2 py-4">
+    <div className="w-full flex flex-col items-start px-2 py-4">
           {/* Header Section */}
           <div className="relative w-full flex flex-col mb-8">
             <div
@@ -718,11 +723,7 @@ export function NewEvent() {
               </AlertDialogFooter>
             </AlertDialogContent>
           </AlertDialog>
-        </div>
-      ) : (
-        navigateto("/nopermission")
-      )}
-    </>
+    </div>
   );
 }
 

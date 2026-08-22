@@ -8,7 +8,8 @@ export function RootLayout() {
   const { data: session, isLoading } = useUserSession();
 
   const currentUser = session?.user || null;
-  const permissions = session?.permissions || "RnVsbA==";
+  const permissions = session?.permissions || session?.role || null;
+  const role = session?.role || "read_only";
 
   useEffect(() => {
     if (!isLoading && session && !session.isAuthenticated) {
@@ -17,8 +18,8 @@ export function RootLayout() {
   }, [isLoading, session, navigate]);
 
   return (
-    <Navbar access={permissions} user={currentUser}>
-      <Outlet context={{ permissions, user: currentUser }} />
+    <Navbar access={permissions} user={currentUser} role={role}>
+      <Outlet context={{ permissions, role, user: currentUser }} />
     </Navbar>
   );
 }

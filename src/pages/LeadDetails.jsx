@@ -75,7 +75,7 @@ export function LeadDetails() {
 
   useEffect(() => {
     if (permissions && !canManageLeads(permissions)) {
-      navigate("/nopermission");
+      navigate("/no-permission");
     }
   }, [permissions, navigate]);
 

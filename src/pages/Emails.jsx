@@ -1,5 +1,5 @@
 import { useState, useEffect, startTransition } from "react";
-import { useNavigate, Navigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import {
   Search,
   File,
@@ -69,6 +69,12 @@ export function Emails() {
   const navigateto = useNavigate();
   const outlet = useOutletContext();
   const access = outlet?.permissions;
+
+  useEffect(() => {
+    if (access && !canManageEmails(access)) {
+      navigateto("/no-permission");
+    }
+  }, [access, navigateto]);
 
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -250,15 +256,12 @@ export function Emails() {
 
   return (
     <>
-      {access ? (
-        canManageEmails(access) ? (
-          <>
-            {loading ? (
-              <div className="min-h-screen flex items-center justify-center">
-                <Loading />
-              </div>
-            ) : (
-              <div className="w-full flex flex-col items-start px-2 py-4">
+      {loading ? (
+        <div className="min-h-screen flex items-center justify-center">
+          <Loading />
+        </div>
+      ) : (
+        <div className="w-full flex flex-col items-start px-2 py-4">
                 {/* Search & Filters */}
                 <div className="w-full flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
                   <div className="relative w-full sm:w-80 md:w-96 max-w-md">
@@ -854,15 +857,6 @@ export function Emails() {
                 </div>
               </div>
             )}
-          </>
-        ) : (
-          <Navigate to="/nopermission" replace />
-        )
-      ) : (
-        <div className="min-h-screen flex items-center justify-center">
-          <Loading />
-        </div>
-      )}
     </>
   );
 }

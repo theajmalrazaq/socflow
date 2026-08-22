@@ -86,7 +86,7 @@ export function EventDetails() {
 
   useEffect(() => {
     if (permissions && !canViewRegistrations(permissions)) {
-      navigator("/nopermission");
+      navigator("/no-permission");
     }
   }, [permissions, navigator]);
 
@@ -463,8 +463,7 @@ export function EventDetails() {
 
   return (
     <>
-      {canViewRegistrations(permissions) ? (
-        <div className="w-full space-y-6 px-2 py-4">
+      <div className="w-full space-y-6 px-2 py-4">
           {/* Header Section */}
           <div className="relative w-full flex flex-col mb-8">
             <div
@@ -1282,9 +1281,6 @@ export function EventDetails() {
             </Dialog>
           )}
         </div>
-      ) : (
-        navigator("/nopermission")
-      )}
       <div className="fixed left-[-9999px] top-[-9999px]">
         {currentCertificate && <Certificate ref={certificateRef} {...currentCertificate} />}
       </div>

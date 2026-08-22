@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback, memo } from "react";
+import { useState, useMemo, useCallback, memo } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import PropTypes from "prop-types";
 import { motion, AnimatePresence } from "framer-motion";
@@ -59,21 +59,7 @@ export function Navbar({ access, user, children }) {
     () => typeof window !== "undefined" && localStorage.getItem("sidebar-collapsed") === "true",
   );
 
-  // Vercel Rule: client-localstorage-schema
-  useEffect(() => {
-    if (access) {
-      localStorage.setItem("user-permissions", access);
-    }
-  }, [access]);
-
-  const effectiveAccess = useMemo(() => {
-    if (access) return access;
-    if (typeof window !== "undefined") {
-      const cached = localStorage.getItem("user-permissions");
-      if (cached) return cached;
-    }
-    return "admin";
-  }, [access]);
+  const effectiveAccess = access || session?.permissions || session?.role || null;
 
   const handleToggleCollapse = useCallback(() => {
     setIsCollapsed((prev) => {
