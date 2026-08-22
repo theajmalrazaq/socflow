@@ -107,7 +107,7 @@ export async function sendEmail({
     data = responseText ? JSON.parse(responseText) : {};
   } catch (_) {
     throw new Error(
-      `Delivery service responded with status ${response.status}: ${responseText.slice(0, 120) || "Empty response"}`
+      `Delivery service responded with status ${response.status}: ${responseText.slice(0, 120) || "Empty response"}`,
     );
   }
 
@@ -342,7 +342,16 @@ export async function sendContactResponseEmail({
  */
 export async function sendInductionEmail({ to, recipientEmails, name, deadline }) {
   const cfg = getEmailConfig();
-  const rawList = recipientEmails || (Array.isArray(to) ? to : typeof to === "string" ? to.split(/[;,]+/).map(s => s.trim()).filter(Boolean) : []);
+  const rawList =
+    recipientEmails ||
+    (Array.isArray(to)
+      ? to
+      : typeof to === "string"
+        ? to
+            .split(/[;,]+/)
+            .map((s) => s.trim())
+            .filter(Boolean)
+        : []);
 
   if (Array.isArray(rawList) && rawList.length > 1) {
     const bulkRes = await sendBulkEmails({
@@ -380,7 +389,16 @@ export async function sendInductionEmail({ to, recipientEmails, name, deadline }
  */
 export async function sendAnnouncementEmail({ to, recipientEmails, title, message }) {
   const cfg = getEmailConfig();
-  const rawList = recipientEmails || (Array.isArray(to) ? to : typeof to === "string" && to.includes(",") ? to.split(/[;,]+/).map(s => s.trim()).filter(Boolean) : null);
+  const rawList =
+    recipientEmails ||
+    (Array.isArray(to)
+      ? to
+      : typeof to === "string" && to.includes(",")
+        ? to
+            .split(/[;,]+/)
+            .map((s) => s.trim())
+            .filter(Boolean)
+        : null);
 
   if (Array.isArray(rawList) && rawList.length > 1) {
     const bulkRes = await sendBulkEmails({

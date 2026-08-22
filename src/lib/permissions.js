@@ -143,7 +143,13 @@ export const READ_ONLY_PRESET = {
   },
   emails: {
     enabled: false,
-    sub: { viewResponses: false, changeStatus: false, sendEmail: false, deleteEmail: false, manageSettings: false },
+    sub: {
+      viewResponses: false,
+      changeStatus: false,
+      sendEmail: false,
+      deleteEmail: false,
+      manageSettings: false,
+    },
   },
   users: { enabled: false, sub: { createUser: false, editRole: false, deleteUser: false } },
 };

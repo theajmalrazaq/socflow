@@ -81,7 +81,8 @@ export function SendEmail() {
             <CardTitle className="text-xl font-bold">Email Details</CardTitle>
             <CardDescription>
               Emails will be sent using your current template branding (
-              <span className="font-semibold text-foreground">{emailConfig.brandName}</span>, colors, and logo).
+              <span className="font-semibold text-foreground">{emailConfig.brandName}</span>,
+              colors, and logo).
             </CardDescription>
           </CardHeader>
           <CardContent>

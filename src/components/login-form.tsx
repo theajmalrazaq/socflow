@@ -28,11 +28,16 @@ export function LoginForm({ className, ...props }: React.ComponentProps<"form">)
           <Input id="password" name="password" type="password" required />
         </Field>
         <Field>
-          <Button type="submit" className="w-full cursor-pointer">Login</Button>
+          <Button type="submit" className="w-full cursor-pointer">
+            Login
+          </Button>
         </Field>
         <div className="text-center text-xs text-muted-foreground pt-1">
           Don't have a society account?{" "}
-          <Link to="/signup" className="text-primary font-semibold underline-offset-4 hover:underline">
+          <Link
+            to="/signup"
+            className="text-primary font-semibold underline-offset-4 hover:underline"
+          >
             Register Society
           </Link>
         </div>

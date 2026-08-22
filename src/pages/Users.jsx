@@ -496,7 +496,13 @@ export function Users() {
         },
         emails: {
           enabled: true,
-          sub: { viewResponses: true, changeStatus: false, sendEmail: false, deleteEmail: false, manageSettings: false },
+          sub: {
+            viewResponses: true,
+            changeStatus: false,
+            sendEmail: false,
+            deleteEmail: false,
+            manageSettings: false,
+          },
         },
         users: { enabled: false, sub: { createUser: false, editRole: false, deleteUser: false } },
       });

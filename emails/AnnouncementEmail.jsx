@@ -148,65 +148,61 @@ export const AnnouncementEmail = ({ title, message, config = {} }) => {
 
               {/* Footer */}
               <Section className="p-8 text-left">
-                <Row className="mb-6">
-                  <Column>
-                    {cfg.instagramUrl && (
-                      <Link
-                        href={cfg.instagramUrl}
-                        className="text-sm text-muted-foreground hover:text-foreground no-underline mr-6"
-                      >
-                        Instagram
-                      </Link>
-                    )}
-                    {cfg.linkedinUrl && (
-                      <Link
-                        href={cfg.linkedinUrl}
-                        className="text-sm text-muted-foreground hover:text-foreground no-underline mr-6"
-                      >
-                        LinkedIn
-                      </Link>
-                    )}
-                    {cfg.twitterUrl && (
-                      <Link
-                        href={cfg.twitterUrl}
-                        className="text-sm text-muted-foreground hover:text-foreground no-underline mr-6"
-                      >
-                        Twitter / X
-                      </Link>
-                    )}
-                    {cfg.websiteUrl && (
-                      <Link
-                        href={baseUrl}
-                        className="text-sm text-muted-foreground hover:text-foreground no-underline"
-                      >
-                        Website
-                      </Link>
-                    )}
-                  </Column>
-                </Row>
+                {(cfg.instagramUrl || cfg.linkedinUrl || cfg.twitterUrl || cfg.websiteUrl) && (
+                  <Row className="mb-6">
+                    <Column>
+                      {cfg.instagramUrl && (
+                        <Link
+                          href={cfg.instagramUrl}
+                          className="text-sm text-muted-foreground hover:text-foreground no-underline mr-6"
+                        >
+                          Instagram
+                        </Link>
+                      )}
+                      {cfg.linkedinUrl && (
+                        <Link
+                          href={cfg.linkedinUrl}
+                          className="text-sm text-muted-foreground hover:text-foreground no-underline mr-6"
+                        >
+                          LinkedIn
+                        </Link>
+                      )}
+                      {cfg.twitterUrl && (
+                        <Link
+                          href={cfg.twitterUrl}
+                          className="text-sm text-muted-foreground hover:text-foreground no-underline mr-6"
+                        >
+                          Twitter / X
+                        </Link>
+                      )}
+                      {cfg.websiteUrl && (
+                        <Link
+                          href={baseUrl}
+                          className="text-sm text-muted-foreground hover:text-foreground no-underline"
+                        >
+                          Website
+                        </Link>
+                      )}
+                    </Column>
+                  </Row>
+                )}
 
                 <Text className="text-xs text-muted-foreground m-0 text-left">
                   {cfg.footerCopyright || `© ${new Date().getFullYear()} ${cfg.brandName || "Society"}. All rights reserved.`}
                 </Text>
-                {cfg.showCreatorCredit && cfg.creatorName && (
-                  <Text className="text-xs text-muted-foreground mt-2 text-left">
-                    Crafted with <span className="text-red-500">♥</span> by{" "}
-                    <Link
-                      href={cfg.creatorLink || "#"}
-                      className="text-foreground underline"
-                    >
-                      {cfg.creatorName}
-                    </Link>
-                  </Text>
-                )}
+
                 {cfg.footerDisclaimer && (
                   <Text className="text-xs text-muted-foreground mt-2 text-left">
-                    {cfg.footerDisclaimer}{" "}
-                    {cfg.supportEmail && (
-                      <Link href={`mailto:${cfg.supportEmail}`} className="text-foreground underline">
-                        {cfg.supportEmail}
-                      </Link>
-                    )}
+                    {cfg.footerDisclaimer}
+                  </Text>
+                )}
+
+                {cfg.supportEmail && (
+                  <Text className="text-xs text-muted-foreground mt-1 text-left">
+                    Contact:{" "}
+                    <Link href={`mailto:${cfg.supportEmail}`} className="text-foreground underline">
+                      {cfg.supportEmail}
+                    </Link>
                   </Text>
                 )}
 

@@ -1,12 +1,6 @@
 import { useState, useEffect, useCallback, useTransition } from "react";
 import { useNavigate, useOutletContext } from "react-router-dom";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -273,24 +267,21 @@ export function EmailSettings() {
   }, []);
 
   // Re-render email HTML for preview
-  const updatePreview = useCallback(
-    async (currentConfig, templateId) => {
-      setPreviewLoading(true);
-      try {
-        const props = {
-          ...SAMPLE_TEMPLATE_PROPS[templateId],
-          config: currentConfig,
-        };
-        const html = await renderEmailTemplate(templateId, props);
-        setPreviewHtml(html);
-      } catch (err) {
-        console.error("Failed to render preview:", err);
-      } finally {
-        setPreviewLoading(false);
-      }
-    },
-    [],
-  );
+  const updatePreview = useCallback(async (currentConfig, templateId) => {
+    setPreviewLoading(true);
+    try {
+      const props = {
+        ...SAMPLE_TEMPLATE_PROPS[templateId],
+        config: currentConfig,
+      };
+      const html = await renderEmailTemplate(templateId, props);
+      setPreviewHtml(html);
+    } catch (err) {
+      console.error("Failed to render preview:", err);
+    } finally {
+      setPreviewLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -481,24 +472,37 @@ export function EmailSettings() {
       });
 
       const recipient = societyData.email || smtpData.user.trim();
+      const currentBrand = formData.brandName || societyData.name || smtpData.fromName || "Society";
+      const testConfig = {
+        ...formData,
+        brandName: currentBrand,
+        senderName: smtpData.fromName || formData.senderName || currentBrand,
+        supportEmail: formData.supportEmail || societyData.email || "",
+        footerCopyright:
+          formData.footerCopyright ||
+          `© ${new Date().getFullYear()} ${currentBrand}. All rights reserved.`,
+        footerDisclaimer: formData.footerDisclaimer || "",
+      };
+
       await sendEmail({
         to: recipient,
-        subject: `[SMTP Test] Delivery Verified for ${smtpData.fromName || formData.brandName || "Your Society"}`,
+        subject: `[SMTP Test] Delivery Verified for ${currentBrand}`,
         templateName: "announcement",
         templateProps: {
           title: "SMTP Connection Verified! 🚀",
           message:
             "Congratulations! Your custom Gmail SMTP credentials are properly configured and operational. All outgoing emails from this dashboard will now be sent securely through your Gmail account.",
-          config: formData,
+          config: testConfig,
         },
-        fromName: smtpData.fromName || formData.brandName,
+        fromName: smtpData.fromName || currentBrand,
       });
 
       toast.success(`Verification email successfully delivered to ${recipient}!`);
     } catch (err) {
       console.error("SMTP Test Failed:", err);
       toast.error(
-        err.message || "SMTP connection failed. Check your Gmail address and 16-character App Password.",
+        err.message ||
+          "SMTP connection failed. Check your Gmail address and 16-character App Password.",
       );
     } finally {
       setTestingSmtp(false);
@@ -614,11 +618,7 @@ export function EmailSettings() {
               disabled={isSaving}
               className="gap-1.5 cursor-pointer bg-primary text-primary-foreground shadow-sm h-10 px-4 font-semibold"
             >
-              {isSaving ? (
-                <Loader2 className="size-4 animate-spin" />
-              ) : (
-                <Save className="size-4" />
-              )}
+              {isSaving ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}
               Save Changes
             </Button>
           </div>
@@ -632,9 +632,7 @@ export function EmailSettings() {
           <div className="lg:col-span-7 w-full flex flex-col gap-6">
             <Card className="rounded-2xl bg-card/80 border border-border/60 backdrop-blur-md shadow-xs">
               <CardHeader className="text-left pb-4">
-                <CardTitle className="text-xl font-bold">
-                  Society & Organization Profile
-                </CardTitle>
+                <CardTitle className="text-xl font-bold">Society & Organization Profile</CardTitle>
                 <CardDescription>
                   Manage chapter identity, logo assets, brand colors, and official contact channels.
                 </CardDescription>
@@ -732,8 +730,7 @@ export function EmailSettings() {
                             setSocietyData((prev) => ({ ...prev, brandingColor: p.primaryColor }))
                           }
                           className={`size-7 rounded-full border-2 transition-all cursor-pointer flex items-center justify-center ${
-                            societyData.brandingColor.toLowerCase() ===
-                            p.primaryColor.toLowerCase()
+                            societyData.brandingColor.toLowerCase() === p.primaryColor.toLowerCase()
                               ? "border-foreground scale-110 shadow-md"
                               : "border-transparent hover:scale-105"
                           }`}
@@ -791,7 +788,10 @@ export function EmailSettings() {
 
                   {/* Cover URL */}
                   <div className="space-y-1.5">
-                    <Label htmlFor="socCover" className="text-xs font-semibold flex items-center justify-between">
+                    <Label
+                      htmlFor="socCover"
+                      className="text-xs font-semibold flex items-center justify-between"
+                    >
                       <span>Cover / Banner Image Link</span>
                       <span className="text-[11px] text-primary font-medium">
                         Recommended: 1200 × 400 px (3:1)
@@ -879,9 +879,7 @@ export function EmailSettings() {
           <div className="lg:col-span-5 w-full flex flex-col gap-4">
             <Card className="rounded-2xl bg-card/80 border border-border/60 backdrop-blur-md shadow-xs overflow-hidden">
               <CardHeader className="text-left pb-3 border-b border-border/40">
-                <CardTitle className="text-base font-bold">
-                  Live Society Card Preview
-                </CardTitle>
+                <CardTitle className="text-base font-bold">Live Society Card Preview</CardTitle>
                 <CardDescription className="text-xs">
                   How your society appears across public portals and email headers
                 </CardDescription>
@@ -991,9 +989,7 @@ export function EmailSettings() {
               <TabsContent value="brand" className="space-y-4 mt-4">
                 <Card className="rounded-2xl bg-card/80 border border-border/60 backdrop-blur-md shadow-xs">
                   <CardHeader className="text-left pb-3">
-                    <CardTitle className="text-base font-bold">
-                      Brand Identity & Assets
-                    </CardTitle>
+                    <CardTitle className="text-base font-bold">Brand Identity & Assets</CardTitle>
                     <CardDescription className="text-xs">
                       Primary organization details attached to all outgoing email headers.
                     </CardDescription>
@@ -1211,9 +1207,7 @@ export function EmailSettings() {
               <TabsContent value="social" className="space-y-4 mt-4">
                 <Card className="rounded-2xl bg-card/80 border border-border/60 backdrop-blur-md shadow-xs">
                   <CardHeader className="text-left pb-3">
-                    <CardTitle className="text-base font-bold">
-                      Social Channels & Links
-                    </CardTitle>
+                    <CardTitle className="text-base font-bold">Social Channels & Links</CardTitle>
                     <CardDescription className="text-xs">
                       Social profile buttons rendered at the bottom of each email.
                     </CardDescription>
@@ -1269,7 +1263,8 @@ export function EmailSettings() {
                       Footer Information & Disclaimers
                     </CardTitle>
                     <CardDescription className="text-xs">
-                      Customize copyright statement, automated disclaimers, and optional developer credit.
+                      Customize copyright statement, automated disclaimers, and optional developer
+                      credit.
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4 text-left">
@@ -1302,7 +1297,9 @@ export function EmailSettings() {
 
                     <div className="flex items-center justify-between pt-2 border-t border-border/50">
                       <div className="space-y-0.5">
-                        <Label className="text-xs font-semibold">Show Creator Credit in Footer</Label>
+                        <Label className="text-xs font-semibold">
+                          Show Creator Credit in Footer
+                        </Label>
                         <p className="text-[11px] text-muted-foreground">
                           Display "Crafted with ♥ by ..." at bottom
                         </p>
@@ -1353,9 +1350,7 @@ export function EmailSettings() {
             <Card className="rounded-2xl bg-card/80 border border-border/60 backdrop-blur-md shadow-xs overflow-hidden">
               <CardHeader className="text-left pb-3 border-b border-border/40">
                 <div className="flex items-center justify-between gap-2 flex-wrap">
-                  <CardTitle className="text-base font-bold">
-                    Live Template Preview
-                  </CardTitle>
+                  <CardTitle className="text-base font-bold">Live Template Preview</CardTitle>
 
                   {/* Device Switcher */}
                   <div className="flex items-center gap-1 bg-muted/60 p-0.5 rounded-lg border border-border/60">
@@ -1431,11 +1426,10 @@ export function EmailSettings() {
           <div className="lg:col-span-7 w-full flex flex-col gap-6">
             <Card className="rounded-2xl bg-card/80 border border-border/60 backdrop-blur-md shadow-xs">
               <CardHeader className="text-left pb-4">
-                <CardTitle className="text-xl font-bold">
-                  SMTP Mail Delivery Engine
-                </CardTitle>
+                <CardTitle className="text-xl font-bold">SMTP Mail Delivery Engine</CardTitle>
                 <CardDescription>
-                  Configure your own custom Gmail account or SMTP server to dispatch official chapter emails directly from your inbox.
+                  Configure your own custom Gmail account or SMTP server to dispatch official
+                  chapter emails directly from your inbox.
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-5 text-left">
@@ -1449,9 +1443,7 @@ export function EmailSettings() {
                       id="smtpUser"
                       type="email"
                       value={smtpData.user}
-                      onChange={(e) =>
-                        setSmtpData((prev) => ({ ...prev, user: e.target.value }))
-                      }
+                      onChange={(e) => setSmtpData((prev) => ({ ...prev, user: e.target.value }))}
                       placeholder="your-society@gmail.com"
                       required
                       className="h-10"
@@ -1482,9 +1474,7 @@ export function EmailSettings() {
                         id="smtpPass"
                         type={showSmtpPassword ? "text" : "password"}
                         value={smtpData.pass}
-                        onChange={(e) =>
-                          setSmtpData((prev) => ({ ...prev, pass: e.target.value }))
-                        }
+                        onChange={(e) => setSmtpData((prev) => ({ ...prev, pass: e.target.value }))}
                         placeholder="xxxx xxxx xxxx xxxx"
                         required
                         className="h-10 pr-10 font-mono text-xs tracking-wider"
@@ -1503,7 +1493,8 @@ export function EmailSettings() {
                       </button>
                     </div>
                     <p className="text-[11px] text-muted-foreground">
-                      Do not use your standard Google account login password. Generate a 16-character dedicated <strong>App Password</strong>.
+                      Do not use your standard Google account login password. Generate a
+                      16-character dedicated <strong>App Password</strong>.
                     </p>
                   </div>
 
@@ -1532,9 +1523,7 @@ export function EmailSettings() {
                       <Input
                         id="smtpHost"
                         value={smtpData.host}
-                        onChange={(e) =>
-                          setSmtpData((prev) => ({ ...prev, host: e.target.value }))
-                        }
+                        onChange={(e) => setSmtpData((prev) => ({ ...prev, host: e.target.value }))}
                         placeholder="smtp.gmail.com"
                         className="h-10 font-mono text-xs"
                       />
@@ -1618,9 +1607,7 @@ export function EmailSettings() {
             {/* Status Card */}
             <Card className="rounded-2xl bg-card/80 border border-border/60 backdrop-blur-md shadow-xs">
               <CardHeader className="text-left pb-3 border-b border-border/40">
-                <CardTitle className="text-base font-bold">
-                  SMTP Engine Status
-                </CardTitle>
+                <CardTitle className="text-base font-bold">SMTP Engine Status</CardTitle>
                 <CardDescription className="text-xs">
                   Real-time transport diagnostics
                 </CardDescription>
@@ -1635,7 +1622,9 @@ export function EmailSettings() {
                   </div>
                   <div className="flex items-center justify-between text-xs">
                     <span className="text-muted-foreground">Server Host:</span>
-                    <span className="font-mono text-foreground">{smtpData.host || "smtp.gmail.com"}</span>
+                    <span className="font-mono text-foreground">
+                      {smtpData.host || "smtp.gmail.com"}
+                    </span>
                   </div>
                   <div className="flex items-center justify-between text-xs">
                     <span className="text-muted-foreground">Port & Encryption:</span>
@@ -1663,7 +1652,8 @@ export function EmailSettings() {
                     1
                   </span>
                   <p>
-                    Enable <strong>2-Step Verification</strong> on your Google Account if not already turned on.
+                    Enable <strong>2-Step Verification</strong> on your Google Account if not
+                    already turned on.
                   </p>
                 </div>
 
@@ -1672,7 +1662,16 @@ export function EmailSettings() {
                     2
                   </span>
                   <p>
-                    Visit <a href="https://myaccount.google.com/apppasswords" target="_blank" rel="noreferrer" className="text-primary font-semibold hover:underline">myaccount.google.com/apppasswords</a>.
+                    Visit{" "}
+                    <a
+                      href="https://myaccount.google.com/apppasswords"
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-primary font-semibold hover:underline"
+                    >
+                      myaccount.google.com/apppasswords
+                    </a>
+                    .
                   </p>
                 </div>
 
@@ -1681,7 +1680,8 @@ export function EmailSettings() {
                     3
                   </span>
                   <p>
-                    Enter an app name (e.g. <strong>"Society Dashboard"</strong>) and click <strong>Create</strong>.
+                    Enter an app name (e.g. <strong>"Society Dashboard"</strong>) and click{" "}
+                    <strong>Create</strong>.
                   </p>
                 </div>
 
@@ -1690,7 +1690,8 @@ export function EmailSettings() {
                     4
                   </span>
                   <p>
-                    Copy the <strong>16-character generated code</strong> and paste it into the Google App Password field on the left.
+                    Copy the <strong>16-character generated code</strong> and paste it into the
+                    Google App Password field on the left.
                   </p>
                 </div>
               </CardContent>
@@ -1751,9 +1752,7 @@ export function EmailSettings() {
             <div className="p-3 rounded-xl bg-muted/50 border border-border/60 text-xs text-muted-foreground space-y-1">
               <div className="flex items-center justify-between">
                 <span>Template:</span>
-                <span className="font-semibold text-foreground capitalize">
-                  {selectedTemplate}
-                </span>
+                <span className="font-semibold text-foreground capitalize">{selectedTemplate}</span>
               </div>
               <div className="flex items-center justify-between">
                 <span>Sender:</span>

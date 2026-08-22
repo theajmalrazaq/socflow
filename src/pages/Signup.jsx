@@ -294,14 +294,26 @@ export function Signup() {
           </CardHeader>
 
           <CardContent className="p-6 sm:p-8">
-            <form onSubmit={step === 3 ? handleSubmit : (e) => { e.preventDefault(); handleNext(); }}>
+            <form
+              onSubmit={
+                step === 3
+                  ? handleSubmit
+                  : (e) => {
+                      e.preventDefault();
+                      handleNext();
+                    }
+              }
+            >
               {/* STEP 1: Account & Society Identity */}
               {step === 1 && (
                 <div className="space-y-4 text-left animate-in fade-in duration-200">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     {/* Society Name */}
                     <div className="space-y-1.5 sm:col-span-2">
-                      <Label htmlFor="societyName" className="text-xs font-semibold flex items-center gap-1.5">
+                      <Label
+                        htmlFor="societyName"
+                        className="text-xs font-semibold flex items-center gap-1.5"
+                      >
                         <Building2 className="size-3.5 text-primary" />
                         Society / Chapter Name <span className="text-red-500">*</span>
                       </Label>
@@ -317,7 +329,10 @@ export function Signup() {
 
                     {/* Society Username */}
                     <div className="space-y-1.5">
-                      <Label htmlFor="username" className="text-xs font-semibold flex items-center gap-1.5">
+                      <Label
+                        htmlFor="username"
+                        className="text-xs font-semibold flex items-center gap-1.5"
+                      >
                         <AtSign className="size-3.5 text-primary" />
                         Society Handle / Slug <span className="text-red-500">*</span>
                       </Label>
@@ -335,12 +350,17 @@ export function Signup() {
                         required
                         className="h-10 font-mono text-xs"
                       />
-                      <p className="text-[11px] text-muted-foreground">Used for portal URLs & identifier</p>
+                      <p className="text-[11px] text-muted-foreground">
+                        Used for portal URLs & identifier
+                      </p>
                     </div>
 
                     {/* Admin Contact Email */}
                     <div className="space-y-1.5">
-                      <Label htmlFor="email" className="text-xs font-semibold flex items-center gap-1.5">
+                      <Label
+                        htmlFor="email"
+                        className="text-xs font-semibold flex items-center gap-1.5"
+                      >
                         <Mail className="size-3.5 text-primary" />
                         Society Admin Email <span className="text-red-500">*</span>
                       </Label>
@@ -371,7 +391,10 @@ export function Signup() {
 
                     {/* Password */}
                     <div className="space-y-1.5">
-                      <Label htmlFor="password" className="text-xs font-semibold flex items-center gap-1.5">
+                      <Label
+                        htmlFor="password"
+                        className="text-xs font-semibold flex items-center gap-1.5"
+                      >
                         <Lock className="size-3.5 text-primary" />
                         Password <span className="text-red-500">*</span>
                       </Label>
@@ -390,7 +413,11 @@ export function Signup() {
                           onClick={() => setShowPassword(!showPassword)}
                           className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground cursor-pointer"
                         >
-                          {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+                          {showPassword ? (
+                            <EyeOff className="size-4" />
+                          ) : (
+                            <Eye className="size-4" />
+                          )}
                         </button>
                       </div>
 
@@ -399,29 +426,39 @@ export function Signup() {
                         <div className="space-y-1 pt-1">
                           <div className="flex items-center justify-between text-[11px]">
                             <span className="text-muted-foreground">Strength:</span>
-                            <span className={`font-semibold ${passwordStrengthLabel.color.split(" ")[1]}`}>
+                            <span
+                              className={`font-semibold ${passwordStrengthLabel.color.split(" ")[1]}`}
+                            >
                               {passwordStrengthLabel.label}
                             </span>
                           </div>
                           <div className="grid grid-cols-4 gap-1 h-1.5 rounded-full overflow-hidden bg-muted">
                             <div
                               className={`h-full transition-all ${
-                                passwordScore >= 1 ? passwordStrengthLabel.color.split(" ")[0] : "bg-transparent"
+                                passwordScore >= 1
+                                  ? passwordStrengthLabel.color.split(" ")[0]
+                                  : "bg-transparent"
                               }`}
                             />
                             <div
                               className={`h-full transition-all ${
-                                passwordScore >= 2 ? passwordStrengthLabel.color.split(" ")[0] : "bg-transparent"
+                                passwordScore >= 2
+                                  ? passwordStrengthLabel.color.split(" ")[0]
+                                  : "bg-transparent"
                               }`}
                             />
                             <div
                               className={`h-full transition-all ${
-                                passwordScore >= 3 ? passwordStrengthLabel.color.split(" ")[0] : "bg-transparent"
+                                passwordScore >= 3
+                                  ? passwordStrengthLabel.color.split(" ")[0]
+                                  : "bg-transparent"
                               }`}
                             />
                             <div
                               className={`h-full transition-all ${
-                                passwordScore >= 4 ? passwordStrengthLabel.color.split(" ")[0] : "bg-transparent"
+                                passwordScore >= 4
+                                  ? passwordStrengthLabel.color.split(" ")[0]
+                                  : "bg-transparent"
                               }`}
                             />
                           </div>
@@ -431,7 +468,10 @@ export function Signup() {
 
                     {/* Confirm Password */}
                     <div className="space-y-1.5">
-                      <Label htmlFor="confirmPassword" className="text-xs font-semibold flex items-center gap-1.5">
+                      <Label
+                        htmlFor="confirmPassword"
+                        className="text-xs font-semibold flex items-center gap-1.5"
+                      >
                         <ShieldCheck className="size-3.5 text-primary" />
                         Confirm Password <span className="text-red-500">*</span>
                       </Label>
@@ -450,17 +490,29 @@ export function Signup() {
                           onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                           className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground cursor-pointer"
                         >
-                          {showConfirmPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+                          {showConfirmPassword ? (
+                            <EyeOff className="size-4" />
+                          ) : (
+                            <Eye className="size-4" />
+                          )}
                         </button>
                       </div>
                       {formData.confirmPassword && (
-                        <p className={`text-[11px] flex items-center gap-1 ${
-                          formData.password === formData.confirmPassword ? "text-emerald-600" : "text-red-500"
-                        }`}>
+                        <p
+                          className={`text-[11px] flex items-center gap-1 ${
+                            formData.password === formData.confirmPassword
+                              ? "text-emerald-600"
+                              : "text-red-500"
+                          }`}
+                        >
                           {formData.password === formData.confirmPassword ? (
-                            <><Check className="size-3" /> Passwords match</>
+                            <>
+                              <Check className="size-3" /> Passwords match
+                            </>
                           ) : (
-                            <><X className="size-3" /> Passwords do not match</>
+                            <>
+                              <X className="size-3" /> Passwords do not match
+                            </>
                           )}
                         </p>
                       )}
@@ -524,7 +576,10 @@ export function Signup() {
 
                   {/* Logo Link */}
                   <div className="space-y-1.5">
-                    <Label htmlFor="logoUrl" className="text-xs font-semibold flex items-center gap-1.5">
+                    <Label
+                      htmlFor="logoUrl"
+                      className="text-xs font-semibold flex items-center gap-1.5"
+                    >
                       <ImageIcon className="size-3.5 text-primary" />
                       Society Logo URL (Square 1:1 format)
                     </Label>
@@ -542,7 +597,10 @@ export function Signup() {
 
                   {/* Cover / Banner Link */}
                   <div className="space-y-1.5">
-                    <Label htmlFor="coverUrl" className="text-xs font-semibold flex items-center justify-between">
+                    <Label
+                      htmlFor="coverUrl"
+                      className="text-xs font-semibold flex items-center justify-between"
+                    >
                       <span className="flex items-center gap-1.5">
                         <Sparkles className="size-3.5 text-primary" />
                         Cover / Banner Image Link
@@ -562,7 +620,9 @@ export function Signup() {
 
                   {/* Live Society Card Mini Preview */}
                   <div className="space-y-1.5 pt-2">
-                    <Label className="text-xs font-semibold text-muted-foreground">Live Society Card Preview</Label>
+                    <Label className="text-xs font-semibold text-muted-foreground">
+                      Live Society Card Preview
+                    </Label>
                     <div className="rounded-2xl border border-border/80 overflow-hidden bg-card/60 shadow-md">
                       {/* Cover Banner */}
                       <div className="w-full h-24 sm:h-28 bg-muted relative overflow-hidden">
@@ -630,12 +690,16 @@ export function Signup() {
               {step === 3 && (
                 <div className="space-y-4 text-left animate-in fade-in duration-200">
                   <div className="p-3.5 rounded-xl bg-muted/40 border border-border/50 text-xs text-muted-foreground leading-relaxed">
-                    Social links will automatically be attached to your official email template footers and public event portals.
+                    Social links will automatically be attached to your official email template
+                    footers and public event portals.
                   </div>
 
                   {/* Instagram */}
                   <div className="space-y-1.5">
-                    <Label htmlFor="instagramUrl" className="text-xs font-semibold flex items-center gap-1.5">
+                    <Label
+                      htmlFor="instagramUrl"
+                      className="text-xs font-semibold flex items-center gap-1.5"
+                    >
                       <Instagram className="size-3.5 text-pink-500" />
                       Instagram Profile URL (Optional)
                     </Label>
@@ -650,7 +714,10 @@ export function Signup() {
 
                   {/* LinkedIn */}
                   <div className="space-y-1.5">
-                    <Label htmlFor="linkedinUrl" className="text-xs font-semibold flex items-center gap-1.5">
+                    <Label
+                      htmlFor="linkedinUrl"
+                      className="text-xs font-semibold flex items-center gap-1.5"
+                    >
                       <Linkedin className="size-3.5 text-blue-600" />
                       LinkedIn Page URL (Optional)
                     </Label>
@@ -665,7 +732,10 @@ export function Signup() {
 
                   {/* Website */}
                   <div className="space-y-1.5">
-                    <Label htmlFor="websiteUrl" className="text-xs font-semibold flex items-center gap-1.5">
+                    <Label
+                      htmlFor="websiteUrl"
+                      className="text-xs font-semibold flex items-center gap-1.5"
+                    >
                       <Globe className="size-3.5 text-emerald-500" />
                       Official Website / Linktree URL (Optional)
                     </Label>
@@ -694,7 +764,11 @@ export function Signup() {
                   </Button>
                 ) : (
                   <Link to="/login">
-                    <Button type="button" variant="ghost" className="text-xs text-muted-foreground cursor-pointer">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      className="text-xs text-muted-foreground cursor-pointer"
+                    >
                       Already have an account? Sign In
                     </Button>
                   </Link>
@@ -734,7 +808,8 @@ export function Signup() {
 
         {/* Footer Subtext */}
         <p className="text-center text-xs text-muted-foreground mt-4">
-          By registering, you agree to administer your society in accordance with campus and community guidelines.
+          By registering, you agree to administer your society in accordance with campus and
+          community guidelines.
         </p>
       </div>
     </div>
@@ -742,4 +817,3 @@ export function Signup() {
 }
 
 export default Signup;
-

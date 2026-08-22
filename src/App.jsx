@@ -76,10 +76,7 @@ function App() {
                 path="/manageemails/send"
                 element={<Navigate to="/emails/compose" replace />}
               />
-              <Route
-                path="/manageemails/settings"
-                element={<Navigate to="/settings" replace />}
-              />
+              <Route path="/manageemails/settings" element={<Navigate to="/settings" replace />} />
             </Route>
             <Route path="/no-permission" element={<NoPermission />} />
             <Route path="/nopermission" element={<Navigate to="/no-permission" replace />} />

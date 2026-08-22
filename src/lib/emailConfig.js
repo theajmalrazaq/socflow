@@ -20,9 +20,6 @@ export const DEFAULT_EMAIL_CONFIG = {
   twitterUrl: "",
   footerCopyright: "",
   footerDisclaimer: "",
-  creatorCredit: "",
-  creatorLink: "",
-  showCreatorCredit: false,
 };
 
 export const COLOR_PRESETS = [
@@ -289,13 +286,9 @@ export function useEmailConfig() {
     // Supabase Realtime channel to listen for remote DB updates
     const channel = supabase
       .channel("realtime-app-settings")
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "app_settings" },
-        () => {
-          fetchEmailConfigFromDB();
-        },
-      )
+      .on("postgres_changes", { event: "*", schema: "public", table: "app_settings" }, () => {
+        fetchEmailConfigFromDB();
+      })
       .subscribe();
 
     return () => {
