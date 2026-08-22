@@ -347,10 +347,10 @@ export async function sendInductionEmail({ to, recipientEmails, name, deadline }
     (Array.isArray(to)
       ? to
       : typeof to === "string"
-        ? to
-            .split(/[;,]+/)
-            .map((s) => s.trim())
-            .filter(Boolean)
+        ? to.split(/[;,]+/).flatMap((s) => {
+            const trimmed = s.trim();
+            return trimmed ? [trimmed] : [];
+          })
         : []);
 
   if (Array.isArray(rawList) && rawList.length > 1) {
@@ -394,10 +394,10 @@ export async function sendAnnouncementEmail({ to, recipientEmails, title, messag
     (Array.isArray(to)
       ? to
       : typeof to === "string" && to.includes(",")
-        ? to
-            .split(/[;,]+/)
-            .map((s) => s.trim())
-            .filter(Boolean)
+        ? to.split(/[;,]+/).flatMap((s) => {
+            const trimmed = s.trim();
+            return trimmed ? [trimmed] : [];
+          })
         : null);
 
   if (Array.isArray(rawList) && rawList.length > 1) {

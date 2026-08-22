@@ -514,35 +514,40 @@ export function Inductions() {
       bulkInterviewData.interviewType === "online" ? bulkInterviewData.meetingLink : undefined;
 
     const results = { success: [], failed: [] };
+    const BATCH_SIZE = 5;
+    let completedInterviews = 0;
 
-    // Send emails one by one with progress updates
-    for (let i = 0; i < responsesToSend.length; i++) {
-      const candidate = responsesToSend[i];
+    // Send emails concurrently in batches with progress updates
+    for (let i = 0; i < responsesToSend.length; i += BATCH_SIZE) {
+      const batch = responsesToSend.slice(i, i + BATCH_SIZE);
+      await Promise.all(
+        batch.map(async (candidate) => {
+          try {
+            if (!candidate.nu_email) {
+              results.failed.push({ name: candidate.name, error: "No email address" });
+              return;
+            }
 
-      try {
-        if (!candidate.nu_email) {
-          results.failed.push({ name: candidate.name, error: "No email address" });
-          continue;
-        }
+            await sendInterviewEmail({
+              to: candidate.nu_email,
+              candidateName: candidate.name,
+              interviewDate: formattedDate,
+              interviewTime: timeRange,
+              meetingLink,
+              location,
+            });
 
-        await sendInterviewEmail({
-          to: candidate.nu_email,
-          candidateName: candidate.name,
-          interviewDate: formattedDate,
-          interviewTime: timeRange,
-          meetingLink,
-          location,
-        });
-
-        results.success.push(candidate.name);
-      } catch (error) {
-        console.error(`Failed to send to ${candidate.name}:`, error);
-        results.failed.push({ name: candidate.name, error: error.message });
-      }
-
-      // Update progress
-      setBulkProgress({ current: i + 1, total: responsesToSend.length });
-      setBulkResults({ ...results });
+            results.success.push(candidate.name);
+          } catch (error) {
+            console.error(`Failed to send to ${candidate.name}:`, error);
+            results.failed.push({ name: candidate.name, error: error.message });
+          } finally {
+            completedInterviews += 1;
+            setBulkProgress({ current: completedInterviews, total: responsesToSend.length });
+            setBulkResults({ success: [...results.success], failed: [...results.failed] });
+          }
+        }),
+      );
     }
 
     setSendingBulkInterview(false);
@@ -571,24 +576,31 @@ export function Inductions() {
     setBulkResults({ success: [], failed: [] });
 
     const results = { success: [], failed: [] };
+    const BATCH_SIZE = 5;
+    let completedSelections = 0;
 
-    for (let i = 0; i < responsesToSend.length; i++) {
-      const candidate = responsesToSend[i];
-      try {
-        if (!candidate.nu_email) {
-          results.failed.push({ name: candidate.name, error: "No email address" });
-          continue;
-        }
+    for (let i = 0; i < responsesToSend.length; i += BATCH_SIZE) {
+      const batch = responsesToSend.slice(i, i + BATCH_SIZE);
+      await Promise.all(
+        batch.map(async (candidate) => {
+          try {
+            if (!candidate.nu_email) {
+              results.failed.push({ name: candidate.name, error: "No email address" });
+              return;
+            }
 
-        await sendSelectionEmail({ to: candidate.nu_email, recipientName: candidate.name });
-        results.success.push(candidate.name);
-      } catch (error) {
-        console.error(`Failed to send selection email to ${candidate.name}:`, error);
-        results.failed.push({ name: candidate.name, error: error.message });
-      }
-
-      setBulkProgress({ current: i + 1, total: responsesToSend.length });
-      setBulkResults({ ...results });
+            await sendSelectionEmail({ to: candidate.nu_email, recipientName: candidate.name });
+            results.success.push(candidate.name);
+          } catch (error) {
+            console.error(`Failed to send selection email to ${candidate.name}:`, error);
+            results.failed.push({ name: candidate.name, error: error.message });
+          } finally {
+            completedSelections += 1;
+            setBulkProgress({ current: completedSelections, total: responsesToSend.length });
+            setBulkResults({ success: [...results.success], failed: [...results.failed] });
+          }
+        }),
+      );
     }
 
     setSendingBulkInterview(false);
@@ -614,24 +626,31 @@ export function Inductions() {
     setBulkResults({ success: [], failed: [] });
 
     const results = { success: [], failed: [] };
+    const BATCH_SIZE = 5;
+    let completedRejections = 0;
 
-    for (let i = 0; i < responsesToSend.length; i++) {
-      const candidate = responsesToSend[i];
-      try {
-        if (!candidate.nu_email) {
-          results.failed.push({ name: candidate.name, error: "No email address" });
-          continue;
-        }
+    for (let i = 0; i < responsesToSend.length; i += BATCH_SIZE) {
+      const batch = responsesToSend.slice(i, i + BATCH_SIZE);
+      await Promise.all(
+        batch.map(async (candidate) => {
+          try {
+            if (!candidate.nu_email) {
+              results.failed.push({ name: candidate.name, error: "No email address" });
+              return;
+            }
 
-        await sendRejectionEmail({ to: candidate.nu_email, recipientName: candidate.name });
-        results.success.push(candidate.name);
-      } catch (error) {
-        console.error(`Failed to send rejection email to ${candidate.name}:`, error);
-        results.failed.push({ name: candidate.name, error: error.message });
-      }
-
-      setBulkProgress({ current: i + 1, total: responsesToSend.length });
-      setBulkResults({ ...results });
+            await sendRejectionEmail({ to: candidate.nu_email, recipientName: candidate.name });
+            results.success.push(candidate.name);
+          } catch (error) {
+            console.error(`Failed to send rejection email to ${candidate.name}:`, error);
+            results.failed.push({ name: candidate.name, error: error.message });
+          } finally {
+            completedRejections += 1;
+            setBulkProgress({ current: completedRejections, total: responsesToSend.length });
+            setBulkResults({ success: [...results.success], failed: [...results.failed] });
+          }
+        }),
+      );
     }
 
     setSendingBulkInterview(false);
@@ -669,29 +688,36 @@ export function Inductions() {
     setBulkResults({ success: [], failed: [] });
 
     const results = { success: [], failed: [] };
+    const BATCH_SIZE = 5;
+    let completedAnnouncements = 0;
 
-    for (let i = 0; i < responsesToSend.length; i++) {
-      const candidate = responsesToSend[i];
-      try {
-        if (!candidate.nu_email) {
-          results.failed.push({ name: candidate.name, error: "No email address" });
-          continue;
-        }
+    for (let i = 0; i < responsesToSend.length; i += BATCH_SIZE) {
+      const batch = responsesToSend.slice(i, i + BATCH_SIZE);
+      await Promise.all(
+        batch.map(async (candidate) => {
+          try {
+            if (!candidate.nu_email) {
+              results.failed.push({ name: candidate.name, error: "No email address" });
+              return;
+            }
 
-        await sendAnnouncementEmail({
-          to: candidate.nu_email,
-          title: announcementData.title,
-          message: announcementData.message,
-        });
+            await sendAnnouncementEmail({
+              to: candidate.nu_email,
+              title: announcementData.title,
+              message: announcementData.message,
+            });
 
-        results.success.push(candidate.name);
-      } catch (error) {
-        console.error(`Failed to send announcement to ${candidate.name}:`, error);
-        results.failed.push({ name: candidate.name, error: error.message });
-      }
-
-      setBulkProgress({ current: i + 1, total: responsesToSend.length });
-      setBulkResults({ ...results });
+            results.success.push(candidate.name);
+          } catch (error) {
+            console.error(`Failed to send announcement to ${candidate.name}:`, error);
+            results.failed.push({ name: candidate.name, error: error.message });
+          } finally {
+            completedAnnouncements += 1;
+            setBulkProgress({ current: completedAnnouncements, total: responsesToSend.length });
+            setBulkResults({ success: [...results.success], failed: [...results.failed] });
+          }
+        }),
+      );
     }
 
     setSendingBulkInterview(false);

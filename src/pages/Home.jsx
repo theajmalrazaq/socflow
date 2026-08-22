@@ -151,10 +151,10 @@ export function Home() {
   };
 
   const handleSendInductionEmails = async () => {
-    const rawEmails = inductionEmails
-      .split(/[\n,]+/)
-      .map((e) => e.trim())
-      .filter((e) => e.length > 0);
+    const rawEmails = inductionEmails.split(/[\n,]+/).flatMap((e) => {
+      const trimmed = e.trim();
+      return trimmed ? [trimmed] : [];
+    });
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     const validEmails = rawEmails.filter((e) => emailRegex.test(e));

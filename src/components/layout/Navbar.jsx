@@ -71,7 +71,7 @@ export function Navbar({ access, user, children }) {
 
   const userInitials = useMemo(() => {
     if (userInfo?.name && userInfo.name.trim()) {
-      const parts = userInfo.name.trim().split(" ").filter(Boolean);
+      const parts = userInfo.name.trim().split(/\s+/);
       if (parts.length >= 2) {
         return (parts[0][0] + parts[1][0]).toUpperCase();
       }

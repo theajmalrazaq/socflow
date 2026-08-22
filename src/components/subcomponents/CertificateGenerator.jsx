@@ -66,14 +66,16 @@ export function CertificateGenerator({
               roll: response.member_one_rollno,
               email: response.member_one_numail,
             },
-            response.member_two_name
-              ? {
-                  name: response.member_two_name,
-                  roll: response.member_two_rollno,
-                  email: response.member_two_numail,
-                }
-              : null,
-          ].filter(Boolean),
+            ...(response.member_two_name
+              ? [
+                  {
+                    name: response.member_two_name,
+                    roll: response.member_two_rollno,
+                    email: response.member_two_numail,
+                  },
+                ]
+              : []),
+          ],
         };
       });
     } else {
@@ -94,14 +96,16 @@ export function CertificateGenerator({
                 roll: r.member_one_rollno,
                 email: r.member_one_numail,
               },
-              r.member_two_name
-                ? {
-                    name: r.member_two_name,
-                    roll: r.member_two_rollno,
-                    email: r.member_two_numail,
-                  }
-                : null,
-            ].filter(Boolean)
+              ...(r.member_two_name
+                ? [
+                    {
+                      name: r.member_two_name,
+                      roll: r.member_two_rollno,
+                      email: r.member_two_numail,
+                    },
+                  ]
+                : []),
+            ]
           : [{ name: r.name, roll: r.roll_no, email: r.nu_email }],
       }));
     }

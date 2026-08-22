@@ -422,10 +422,10 @@ export function Events() {
           }));
 
           if (createCustomRecipients) {
-            const customs = createCustomRecipients
-              .split(",")
-              .map((e) => e.trim())
-              .filter((e) => e);
+            const customs = createCustomRecipients.split(",").flatMap((e) => {
+              const trimmed = e.trim();
+              return trimmed ? [trimmed] : [];
+            });
             customs.forEach((email) => {
               recipients.push({ email, name: "Guest" });
             });

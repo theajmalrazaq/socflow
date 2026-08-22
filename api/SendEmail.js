@@ -10,19 +10,25 @@ export default async function handler(req, res) {
   const normalizeList = (input) => {
     if (!input) return [];
     if (Array.isArray(input)) {
-      return input
-        .map((it) => {
-          if (!it) return '';
-          if (typeof it === 'string') return it.trim();
-          if (typeof it === 'object') return (it.email || it.to || it.value || '').trim();
-          return String(it).trim();
-        })
-        .filter(Boolean);
+      return input.flatMap((it) => {
+        if (!it) return [];
+        let val = '';
+        if (typeof it === 'string') val = it.trim();
+        else if (typeof it === 'object') val = (it.email || it.to || it.value || '').trim();
+        else val = String(it).trim();
+        return val ? [val] : [];
+      });
     }
     if (typeof input === 'string') {
-      return input.split(/[;,]+/).map((s) => s.trim()).filter(Boolean);
+      return input
+        .split(/[;,]+/)
+        .flatMap((s) => {
+          const trimmed = s.trim();
+          return trimmed ? [trimmed] : [];
+        });
     }
-    return [String(input).trim()].filter(Boolean);
+    const trimmed = String(input).trim();
+    return trimmed ? [trimmed] : [];
   };
 
   const toList = normalizeList(rawTo);
@@ -77,7 +83,7 @@ export default async function handler(req, res) {
     const fromAddress = `"${senderDisplayName}" <${smtpUser}>`;
 
     // Build the set of recipients we will send individual emails to.
-    const allRecipients = Array.from(new Set([...toList]));
+    const allRecipients = Array.from(new Set(toList));
 
     if (allRecipients.length === 0) {
       return res.status(400).json({ message: 'No valid recipients found' });
@@ -85,25 +91,33 @@ export default async function handler(req, res) {
 
     console.log('SendEmail handler: will send individual mails', { toCount: toList.length, total: allRecipients.length, from: fromAddress });
 
-    // Send one email per recipient. We do not include other recipients in these messages
-    // to prevent leaking addresses. Each recipient receives the same content as an individualized mail.
+    // Send emails concurrently in batches using Promise.all to maximize throughput
+    // while preventing SMTP connection exhaustion and provider rate limits.
+    const BATCH_SIZE = 10;
     const sendResults = [];
-    for (const recipient of allRecipients) {
-      const opts = {
-        from: fromAddress,
-        to: recipient,
-        subject,
-        html,
-        attachments,
-      };
 
-      try {
-        const info = await transporter.sendMail(opts);
-        sendResults.push({ to: recipient, success: true, id: info && info.messageId ? info.messageId : null });
-      } catch (err) {
-        console.error('SendEmail error for recipient', recipient, err && err.message ? err.message : err);
-        sendResults.push({ to: recipient, success: false, error: err && err.message ? err.message : String(err) });
-      }
+    for (let i = 0; i < allRecipients.length; i += BATCH_SIZE) {
+      const batch = allRecipients.slice(i, i + BATCH_SIZE);
+      const batchResults = await Promise.all(
+        batch.map(async (recipient) => {
+          const opts = {
+            from: fromAddress,
+            to: recipient,
+            subject,
+            html,
+            attachments,
+          };
+
+          try {
+            const info = await transporter.sendMail(opts);
+            return { to: recipient, success: true, id: info && info.messageId ? info.messageId : null };
+          } catch (err) {
+            console.error('SendEmail error for recipient', recipient, err && err.message ? err.message : err);
+            return { to: recipient, success: false, error: err && err.message ? err.message : String(err) };
+          }
+        })
+      );
+      sendResults.push(...batchResults);
     }
 
     const sentCount = sendResults.filter(r => r.success).length;

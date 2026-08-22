@@ -119,7 +119,7 @@ export function Members() {
         if (Array.isArray(data)) {
           setTeamsList((prev) => {
             try {
-              const found = data.map((d) => (d && d.team ? String(d.team) : null)).filter(Boolean);
+              const found = data.flatMap((d) => (d && d.team ? [String(d.team)] : []));
               const merged = Array.from(new Set([...(prev || []), ...found]));
               return merged;
             } catch {
