@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Navigate, useOutletContext } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import {
   Search,
   File,
@@ -45,31 +45,27 @@ import {
 import Loading from "@/components/layout/Loading";
 import { FormatDate } from "@/components/subcomponents/FormatDate";
 import { supabase } from "@/lib/supabase";
-import { toast } from "sonner";
+import { useOutletContext } from "react-router-dom";
 import { canManageMembers } from "@/lib/permissions";
 
+import {
+  useMembersQuery,
+  useUpdateMemberStatusMutation,
+  useDeleteMemberMutation,
+} from "@/hooks/queries/useMembers";
+
 export function Members() {
+  const navigateto = useNavigate();
   const outlet = useOutletContext();
   const access = outlet?.permissions;
-  const [filteredResponses, setFilteredResponses] = useState([]);
-  const [error, setError] = useState(null);
-  const [responseToDelete, setResponseToDelete] = useState(null);
-  const [loading, setLoading] = useState(false);
+
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [teamFilter, setTeamFilter] = useState("all");
-  const [teamsList, setTeamsList] = useState([]);
   const [page, setPage] = useState(0);
   const [exportFilter, setExportFilter] = useState("all");
-  const [totalResponses, setTotalResponses] = useState(0);
-  const [previousResponses, setPreviousResponses] = useState([]);
   const [responseToView, setResponseToView] = useState(null);
-
-  // Granular loading states
-  const [updatingStatusId, setUpdatingStatusId] = useState(null);
-  const [updatingStatusValue, setUpdatingStatusValue] = useState(undefined);
-  const [deletingId, setDeletingId] = useState(null);
-
+  const [responseToDelete, setResponseToDelete] = useState(null);
   const responsesPerPage = 10;
 
   const useDebounce = (value, delay) => {
@@ -90,166 +86,54 @@ export function Members() {
 
   const debouncedSearchTerm = useDebounce(searchTerm, 500);
 
-  useEffect(() => {
-    const fetchResponses = async () => {
-      setLoading(true);
+  const {
+    data: membersData,
+    isLoading: loading,
+    isError: error,
+  } = useMembersQuery({
+    page,
+    limit: responsesPerPage,
+    status: statusFilter,
+    team: teamFilter,
+    search: debouncedSearchTerm,
+  });
 
-      let query = supabase.from("members").select("*", { count: "exact" });
+  const updateMemberStatusMutation = useUpdateMemberStatusMutation();
+  const deleteMemberMutation = useDeleteMemberMutation();
 
-      if (statusFilter === "active") {
-        query = query.eq("status", true);
-      } else if (statusFilter === "inactive") {
-        query = query.eq("status", false);
-      }
-      if (teamFilter !== "all") {
-        query = query.eq("team", teamFilter);
-      }
+  const filteredResponses = membersData?.data || [];
+  const totalResponses = membersData?.total || 0;
 
-      const { data, error, count } = await query
-        .range(page * responsesPerPage, (page + 1) * responsesPerPage - 1)
-        .order("id", { ascending: false });
+  const teamsList = useMemo(() => {
+    const found = filteredResponses.flatMap((d) => (d && d.team ? [String(d.team)] : []));
+    return Array.from(new Set(found));
+  }, [filteredResponses]);
 
-      if (error) {
-        setError(true);
-      } else {
-        setPreviousResponses(data);
-
-        if (Array.isArray(data)) {
-          setTeamsList((prev) => {
-            try {
-              const found = data.flatMap((d) => (d && d.team ? [String(d.team)] : []));
-              const merged = Array.from(new Set([...(prev || []), ...found]));
-              return merged;
-            } catch {
-              return prev || [];
-            }
-          });
-
-          if (!debouncedSearchTerm.trim()) {
-            setFilteredResponses(data.filter((d) => teamFilter === "all" || d.team === teamFilter));
-          }
-        }
-        setTotalResponses(count);
-      }
-      setLoading(false);
-    };
-
-    fetchResponses();
-  }, [page, responsesPerPage, debouncedSearchTerm, statusFilter, teamFilter]);
-
-  useEffect(() => {
-    const fetchSearchResults = async () => {
-      const lowerCaseSearchTerm = debouncedSearchTerm.toLowerCase();
-
-      let searchQuery = supabase
-        .from("members")
-        .select("*")
-        .or(`roll_no.ilike.%${lowerCaseSearchTerm}%,name.ilike.%${lowerCaseSearchTerm}%`);
-
-      if (statusFilter === "active") {
-        searchQuery = searchQuery.eq("status", true);
-      } else if (statusFilter === "inactive") {
-        searchQuery = searchQuery.eq("status", false);
-      }
-      if (teamFilter !== "all") {
-        searchQuery = searchQuery.eq("team", teamFilter);
-      }
-
-      const { data: responsesForSearch, error } = await searchQuery;
-
-      if (error) {
-        console.error("Error fetching data:", error);
-        return;
-      }
-
-      setFilteredResponses(responsesForSearch);
-    };
-
-    if (debouncedSearchTerm.trim()) {
-      fetchSearchResults();
-    } else {
-      setFilteredResponses(
-        previousResponses.filter((d) => teamFilter === "all" || d.team === teamFilter),
-      );
-    }
-  }, [debouncedSearchTerm, previousResponses, statusFilter, teamFilter]);
+  // Granular loading states
+  const updatingStatusId = updateMemberStatusMutation.isPending
+    ? updateMemberStatusMutation.variables?.id
+    : null;
+  const updatingStatusValue = updateMemberStatusMutation.isPending
+    ? updateMemberStatusMutation.variables?.active
+    : undefined;
+  const deletingId = deleteMemberMutation.isPending ? responseToDelete?.id : null;
 
   const updateResponseStatus = async (responseupdate, status) => {
-    setUpdatingStatusId(responseupdate.id);
-    setUpdatingStatusValue(status);
-
     try {
-      const { error } = await supabase
-        .from("members")
-        .update({ status })
-        .eq("id", responseupdate.id)
-        .select();
-
-      if (error) {
-        throw error;
-      }
-
-      setFilteredResponses((prevResponses) =>
-        prevResponses.map((response) =>
-          response.id === responseupdate.id ? { ...response, status } : response,
-        ),
-      );
-
-      setPreviousResponses((prev) =>
-        prev.map((response) =>
-          response.id === responseupdate.id ? { ...response, status } : response,
-        ),
-      );
-
+      await updateMemberStatusMutation.mutateAsync({
+        id: responseupdate.id,
+        active: Boolean(status),
+      });
       setResponseToView((prev) => (prev?.id === responseupdate.id ? { ...prev, status } : prev));
-
-      toast(
-        <div>
-          <strong>Updated!!</strong>
-          <div>Status Updated Successfully!!</div>
-        </div>,
-      );
-    } catch (err) {
-      console.error("Failed to update status:", err);
-      toast(
-        <div>
-          <strong>Failed!!</strong>
-          <div>{err?.message || "Unable to update status"}</div>
-        </div>,
-      );
-    } finally {
-      setUpdatingStatusId(null);
-      setUpdatingStatusValue(undefined);
-    }
+    } catch {}
   };
 
   const deleteResponse = async () => {
     if (!responseToDelete) return;
-    setDeletingId(responseToDelete.id);
-    const { error } = await supabase.from("members").delete().eq("id", String(responseToDelete.id));
-    if (error) {
-      toast(
-        <div>
-          <strong>Failed!!</strong>
-          <div>Unable to delete member</div>
-        </div>,
-      );
-    } else {
-      setFilteredResponses((prevResponses) =>
-        prevResponses.filter((response) => response.id !== responseToDelete.id),
-      );
-      setPreviousResponses((prevResponses) =>
-        prevResponses.filter((response) => response.id !== responseToDelete.id),
-      );
+    try {
+      await deleteMemberMutation.mutateAsync(String(responseToDelete.id));
       setResponseToDelete(null);
-      toast(
-        <div>
-          <strong>Deleted!!</strong>
-          <div>Member deleted successfully.</div>
-        </div>,
-      );
-    }
-    setDeletingId(null);
+    } catch {}
   };
 
   const fetchFilteredResponses = async (type) => {
@@ -889,16 +773,23 @@ export function Members() {
                 {}
                 <div className="w-full mt-12 text-center">
                   <div className="flex items-center justify-center text-xs text-muted-foreground">
-                    Designed & Built with{" "}
-                    <Heart className="w-3.5 h-3.5 mx-1 text-red-500 fill-red-500 inline" /> for
-                    <span className="text-primary font-semibold ml-1">Socflow</span>
+                    Made With
+                    <Heart className="mx-1 w-4 fill-orange-600 animate-pulse" />
+                    <a
+                      href="https://theajmalrazaq.github.io"
+                      target="_blank"
+                      className="text-orange-600 font-mono font-bold uppercase hover:underline ml-1"
+                      rel="noreferrer"
+                    >
+                      Ajmal Razaq Bhatti
+                    </a>
                   </div>
                 </div>
               </div>
             )}
           </>
         ) : (
-          <Navigate to="/nopermission" replace />
+          navigateto("/nopermission")
         )
       ) : (
         <div className="min-h-screen flex items-center justify-center">

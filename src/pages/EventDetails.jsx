@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import { useLocation, useNavigate, useOutletContext, Navigate } from "react-router-dom";
+import { useLocation, useNavigate, useOutletContext } from "react-router-dom";
 import {
   Mail,
   Search,
@@ -23,7 +23,6 @@ import {
   Loader,
 } from "lucide-react";
 import { Certificate } from "@/components/subcomponents/Certificate";
-import { CertificateGenerator } from "@/components/subcomponents/CertificateGenerator";
 import { sendCertificateEmail } from "@/lib/emailService.jsx";
 import Loading from "@/components/layout/Loading";
 import { Button } from "@/components/ui/button";
@@ -68,6 +67,16 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { canViewRegistrations, hasPermission } from "@/lib/permissions";
 
+import {
+  useEventDetailsQuery,
+  useEventRegistrationsQuery,
+  useWinnersQuery,
+  useAddWinnerMutation,
+  useDeleteWinnerMutation,
+  useUpdateRegistrationMutation,
+  useDeleteRegistrationMutation,
+} from "@/hooks/queries/useEvents";
+
 export function EventDetails() {
   const navigator = useNavigate();
   const location = useLocation();
@@ -81,61 +90,20 @@ export function EventDetails() {
     }
   }, [permissions, navigator]);
 
-  const [filteredResponses, setFilteredResponses] = useState([]);
-  const [error, setError] = useState(false);
-  const [responseToDelete, setResponseToDelete] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [searchTerm, setSearchTerm] = useState("");
   const [page, setPage] = useState(0);
-  const [responsesPerPage] = useState(10);
-  const [totalResponses, setTotalResponses] = useState(0);
-  const [previousResponses, setPreviousResponses] = useState([]);
+  const responsesPerPage = 10;
+  const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [attendanceFilter, setAttendanceFilter] = useState("all");
 
-  // Granular loading states
-  const [updatingStatusId, setUpdatingStatusId] = useState(null);
-  const [updatingStatusValue, setUpdatingStatusValue] = useState(undefined);
-  const [updatingAttendanceId, setUpdatingAttendanceId] = useState(null);
-  const [updatingAttendanceValue, setUpdatingAttendanceValue] = useState(undefined);
-  const [deletingId, setDeletingId] = useState(null);
-
+  const [responseToDelete, setResponseToDelete] = useState(null);
   const [isWinnerDialogOpen, setIsWinnerDialogOpen] = useState(false);
   const [selectedWinner, setSelectedWinner] = useState(null);
   const [winnerPosition, setWinnerPosition] = useState(null);
   const [winnerImageUrl, setWinnerImageUrl] = useState("");
-  const [winners, setWinners] = useState([]);
-  const [eventName, setEventName] = useState(location.state?.event_name || "");
   const [processingEmailId, setProcessingEmailId] = useState(null);
   const [currentCertificate, setCurrentCertificate] = useState(null);
   const certificateRef = useRef(null);
-
-  useEffect(() => {
-    const fetchEventDetails = async () => {
-      if (!event_id) return;
-
-      if (eventName) return;
-
-      const { data } = await supabase.from("events").select("title").eq("id", event_id).single();
-
-      if (data) {
-        setEventName(data.title || data.name || "Event");
-      }
-    };
-
-    fetchEventDetails();
-  }, [event_id, eventName, is_competition]);
-
-  const eventtype = is_competition ? "competitionsResponses" : "eventsResponses";
-
-  const attendanceColumn = useCallback(() => "attendance", []);
-
-  const getAttendance = (response) => {
-    if (!response) return null;
-    if (Object.prototype.hasOwnProperty.call(response, "attendance")) return response.attendance;
-    if (Object.prototype.hasOwnProperty.call(response, "attendence")) return response.attendence;
-    return null;
-  };
 
   const useDebounce = (value, delay) => {
     const [debouncedValue, setDebouncedValue] = useState(value);
@@ -155,24 +123,49 @@ export function EventDetails() {
 
   const debouncedSearchTerm = useDebounce(searchTerm, 500);
 
-  const fetchWinners = useCallback(async () => {
-    const { data, error } = await supabase
-      .from("competitionWinners")
-      .select("*")
-      .eq("event_id", event_id);
+  const { data: eventDetails } = useEventDetailsQuery(event_id);
+  const eventName = location.state?.event_name || eventDetails?.title || "Event";
 
-    if (error) {
-      console.error("Error fetching winners:", error);
-    } else {
-      setWinners(data || []);
-    }
-  }, [event_id]);
+  const {
+    data: regData,
+    isLoading: loading,
+    isError: error,
+  } = useEventRegistrationsQuery({
+    eventId: event_id,
+    isCompetition: is_competition,
+    page,
+    limit: responsesPerPage,
+    status: statusFilter,
+    attendance: attendanceFilter,
+    search: debouncedSearchTerm,
+  });
 
-  useEffect(() => {
-    if (is_competition && event_id) {
-      fetchWinners();
-    }
-  }, [is_competition, event_id, fetchWinners]);
+  const filteredResponses = regData?.data || [];
+  const totalResponses = regData?.total || 0;
+
+  const { data: winners = [] } = useWinnersQuery(event_id);
+  const addWinnerMutation = useAddWinnerMutation(event_id);
+  const deleteWinnerMutation = useDeleteWinnerMutation(event_id);
+  const updateRegMutation = useUpdateRegistrationMutation(event_id, is_competition);
+  const deleteRegMutation = useDeleteRegistrationMutation(event_id, is_competition);
+
+  // Granular loading states
+  const updatingStatusId = updateRegMutation.isPending ? updateRegMutation.variables?.id : null;
+  const updatingAttendanceId = updateRegMutation.isPending
+    ? updateRegMutation.variables?.id
+    : null;
+  const deletingId = deleteRegMutation.isPending ? responseToDelete?.id : null;
+
+  const eventtype = is_competition ? "competitionsResponses" : "eventsResponses";
+
+  const attendanceColumn = useCallback(() => "attendance", []);
+
+  const getAttendance = (response) => {
+    if (!response) return null;
+    if (Object.prototype.hasOwnProperty.call(response, "attendance")) return response.attendance;
+    if (Object.prototype.hasOwnProperty.call(response, "attendence")) return response.attendence;
+    return null;
+  };
 
   useEffect(() => {
     if (selectedWinner && winners.some((w) => w.response_id === selectedWinner.id)) {
@@ -180,173 +173,31 @@ export function EventDetails() {
     }
   }, [winners, selectedWinner]);
 
-  useEffect(() => {
-    const fetchResponses = async () => {
-      setLoading(true);
-
-      let query = supabase
-        .from(eventtype)
-        .select("*", { count: "exact" })
-        .range(page * responsesPerPage, (page + 1) * responsesPerPage - 1)
-        .eq("event_id", event_id)
-        .order("id", { ascending: false });
-
-      if (statusFilter !== "all" && is_competition) {
-        query = query.eq(
-          "status",
-          statusFilter === "verified" ? true : statusFilter === "rejected" ? false : null,
-        );
-      }
-
-      if (attendanceFilter !== "all") {
-        const attCol = attendanceColumn(is_competition);
-        query = query.eq(
-          attCol,
-          attendanceFilter === "present" ? true : attendanceFilter === "absent" ? false : null,
-        );
-      }
-
-      const { data, error, count } = await query;
-
-      if (error) {
-        setError(true);
-      } else {
-        setPreviousResponses(data || []);
-        if (!debouncedSearchTerm.trim()) {
-          setFilteredResponses(data || []);
-        }
-        setTotalResponses(count || 0);
-      }
-      setLoading(false);
-    };
-
-    fetchResponses();
-  }, [
-    page,
-    responsesPerPage,
-    debouncedSearchTerm,
-    event_id,
-    eventtype,
-    statusFilter,
-    attendanceFilter,
-    is_competition,
-    attendanceColumn,
-  ]);
-
-  const check = !is_competition ? "name" : "team_name";
-
-  useEffect(() => {
-    const fetchSearchResults = async () => {
-      const lowerCaseSearchTerm = debouncedSearchTerm.toLowerCase();
-
-      const { data: responsesForSearch, error } = await supabase
-        .from(eventtype)
-        .select("*")
-        .eq("event_id", event_id)
-        .or(`roll_no.ilike.%${lowerCaseSearchTerm}%,${check}.ilike.%${lowerCaseSearchTerm}%`);
-
-      if (error) {
-        console.error("Error fetching data:", error);
-        return;
-      }
-
-      setFilteredResponses(responsesForSearch);
-    };
-
-    if (debouncedSearchTerm.trim()) {
-      fetchSearchResults();
-    } else {
-      setFilteredResponses(previousResponses);
-    }
-  }, [debouncedSearchTerm, previousResponses, event_id, eventtype, check]);
-
   const deleteResponse = async () => {
     if (!responseToDelete) {
       toast.error("No Response Selected");
       return;
     }
 
-    setDeletingId(responseToDelete.id);
-
     try {
-      const { error } = await supabase
-        .from(eventtype)
-        .delete()
-        .eq("id", String(responseToDelete.id));
-
-      if (error) throw new Error(error.message);
-
-      setFilteredResponses((prevResponses) =>
-        prevResponses.filter((response) => response.id !== responseToDelete.id),
-      );
-      setPreviousResponses((prevResponses) =>
-        prevResponses.filter((response) => response.id !== responseToDelete.id),
-      );
-
-      toast.success("Response deleted successfully");
-    } catch (error) {
-      toast.error(error.message || "Failed to delete response");
-    } finally {
+      await deleteRegMutation.mutateAsync(String(responseToDelete.id));
       setResponseToDelete(null);
-      setDeletingId(null);
-    }
+    } catch {}
   };
 
   const updateAttendance = async (response, attendance) => {
-    setUpdatingAttendanceId(response.id);
-    setUpdatingAttendanceValue(attendance);
     const attCol = attendanceColumn(is_competition);
-    const payload = {};
-    payload[attCol] = attendance;
+    const patch = { [attCol]: attendance };
 
     try {
-      const { error } = await supabase
-        .from(eventtype)
-        .update(payload)
-        .eq("id", String(response.id));
-
-      if (error) {
-        toast.error("Unable to update attendance");
-      } else {
-        setFilteredResponses((prevResponses) =>
-          prevResponses.map((r) => (r.id === response.id ? { ...r, [attCol]: attendance } : r)),
-        );
-        setPreviousResponses((prevResponses) =>
-          prevResponses.map((r) => (r.id === response.id ? { ...r, [attCol]: attendance } : r)),
-        );
-        toast.success("Attendance updated successfully");
-      }
-    } finally {
-      setUpdatingAttendanceId(null);
-      setUpdatingAttendanceValue(undefined);
-    }
+      await updateRegMutation.mutateAsync({ id: String(response.id), patch });
+    } catch {}
   };
 
   const updateResponseStatus = async (response, status) => {
-    setUpdatingStatusId(response.id);
-    setUpdatingStatusValue(status);
-
     try {
-      const { error } = await supabase
-        .from(eventtype)
-        .update({ status })
-        .eq("id", String(response.id));
-
-      if (error) {
-        toast.error("Failed to update status");
-      } else {
-        setFilteredResponses((prevResponses) =>
-          prevResponses.map((r) => (r.id === response.id ? { ...r, status } : r)),
-        );
-        setPreviousResponses((prevResponses) =>
-          prevResponses.map((r) => (r.id === response.id ? { ...r, status } : r)),
-        );
-        toast.success("Status updated successfully");
-      }
-    } finally {
-      setUpdatingStatusId(null);
-      setUpdatingStatusValue(undefined);
-    }
+      await updateRegMutation.mutateAsync({ id: String(response.id), patch: { status } });
+    } catch {}
   };
 
   const addWinner = async () => {
@@ -355,48 +206,25 @@ export function EventDetails() {
       return;
     }
 
-    setLoading(true);
-
     try {
-      const { error } = await supabase.from("competitionWinners").insert([
-        {
-          event_id: event_id,
-          response_id: selectedWinner.id,
-          position: winnerPosition,
-          img_url: winnerImageUrl || null,
-        },
-      ]);
+      await addWinnerMutation.mutateAsync({
+        event_id: event_id,
+        response_id: selectedWinner.id,
+        position: winnerPosition,
+        img_url: winnerImageUrl || null,
+      });
 
-      if (error) throw new Error(error.message);
-
-      toast.success(`Winner added for position ${winnerPosition}`);
-      fetchWinners();
       setIsWinnerDialogOpen(false);
       setSelectedWinner(null);
       setWinnerPosition(null);
       setWinnerImageUrl("");
-    } catch (error) {
-      toast.error(error.message || "Failed to add winner");
-    } finally {
-      setLoading(false);
-    }
+    } catch {}
   };
 
   const removeWinner = async (winnerId) => {
-    setLoading(true);
     try {
-      const { error } = await supabase.from("competitionWinners").delete().eq("id", winnerId);
-
-      if (error) throw new Error(error.message);
-
-      toast.success("Winner removed successfully");
-      setWinners((prev) => prev.filter((w) => w.id !== winnerId));
-      await fetchWinners();
-    } catch (error) {
-      toast.error(error.message || "Failed to remove winner");
-    } finally {
-      setLoading(false);
-    }
+      await deleteWinnerMutation.mutateAsync(winnerId);
+    } catch {}
   };
 
   const fetchFilteredResponses = async (type) => {
@@ -1455,7 +1283,7 @@ export function EventDetails() {
           )}
         </div>
       ) : (
-        <Navigate to="/nopermission" replace />
+        navigator("/nopermission")
       )}
       <div className="fixed left-[-9999px] top-[-9999px]">
         {currentCertificate && <Certificate ref={certificateRef} {...currentCertificate} />}

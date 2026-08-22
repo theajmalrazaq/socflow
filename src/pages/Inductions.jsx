@@ -80,15 +80,18 @@ import { Badge } from "@/components/ui/badge";
 import { useNavigate, useOutletContext } from "react-router-dom";
 import { canManageInductions } from "@/lib/permissions";
 
+import {
+  useInductionsQuery,
+  useUpdateInductionStatusMutation,
+  useDeleteInductionMutation,
+  useBulkUpdateInductionStatusMutation,
+} from "@/hooks/queries/useInductions";
+
 export function Inductions() {
   const navigateto = useNavigate();
   const outlet = useOutletContext();
   const access = outlet?.permissions;
 
-  const [filteredResponses, setFilteredResponses] = useState([]);
-  const [error, setError] = useState(false);
-  const [responseToDelete, setResponseToDelete] = useState(null);
-  const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [teamFilter, setTeamFilter] = useState("all");
@@ -96,9 +99,45 @@ export function Inductions() {
   const [exportFilter, setExportFilter] = useState("all");
   const [page, setPage] = useState(0);
   const [responseToView, setResponseToView] = useState(null);
-  const [responsesPerPage] = useState(10);
-  const [totalResponses, setTotalResponses] = useState(0);
-  const [previousResponses, setPreviousResponses] = useState([]);
+  const responsesPerPage = 10;
+  const [responseToDelete, setResponseToDelete] = useState(null);
+
+  const useDebounce = (value, delay) => {
+    const [debouncedValue, setDebouncedValue] = useState(value);
+
+    useEffect(() => {
+      const handler = setTimeout(() => {
+        setDebouncedValue(value);
+      }, delay);
+
+      return () => {
+        clearTimeout(handler);
+      };
+    }, [value, delay]);
+
+    return debouncedValue;
+  };
+
+  const debouncedSearchTerm = useDebounce(searchTerm, 500);
+
+  const {
+    data: inductionsData,
+    isLoading: loading,
+    isError: error,
+  } = useInductionsQuery({
+    page,
+    limit: responsesPerPage,
+    status: statusFilter,
+    team: teamFilter,
+    search: debouncedSearchTerm,
+  });
+
+  const updateInductionStatusMutation = useUpdateInductionStatusMutation();
+  const deleteInductionMutation = useDeleteInductionMutation();
+  const _bulkUpdateInductionMutation = useBulkUpdateInductionStatusMutation();
+
+  const filteredResponses = inductionsData?.data || [];
+  const totalResponses = inductionsData?.total || 0;
 
   // Interview Scheduling State
   const [isInterviewDialogOpen, setIsInterviewDialogOpen] = useState(false);
@@ -133,8 +172,12 @@ export function Inductions() {
   const [singleAnnouncementRecipient, setSingleAnnouncementRecipient] = useState(null);
 
   // New states for granular loading and bulk progress
-  const [updatingStatusId, setUpdatingStatusId] = useState(null);
-  const [updatingStatusValue, setUpdatingStatusValue] = useState(undefined);
+  const updatingStatusId = updateInductionStatusMutation.isPending
+    ? updateInductionStatusMutation.variables?.id
+    : null;
+  const updatingStatusValue = updateInductionStatusMutation.isPending
+    ? updateInductionStatusMutation.variables?.status
+    : undefined;
   const [processingEmailId, setProcessingEmailId] = useState(null);
   const [isBulkProgressDialogOpen, setIsBulkProgressDialogOpen] = useState(false);
   const [bulkActionTitle, setBulkActionTitle] = useState("");
@@ -171,22 +214,6 @@ export function Inductions() {
     return `${h24}:${minute}`;
   };
 
-  const useDebounce = (value, delay) => {
-    const [debouncedValue, setDebouncedValue] = useState(value);
-
-    useEffect(() => {
-      const handler = setTimeout(() => {
-        setDebouncedValue(value);
-      }, delay);
-
-      return () => {
-        clearTimeout(handler);
-      };
-    }, [value, delay]);
-
-    return debouncedValue;
-  };
-
   const openBulkInterviewDialog = async (target = "waiting") => {
     try {
       setBulkTarget(target);
@@ -198,179 +225,26 @@ export function Inductions() {
     setIsBulkInterviewDialogOpen(true);
   };
 
-  const debouncedSearchTerm = useDebounce(searchTerm, 500);
-
-  useEffect(() => {
-    const fetchResponses = async () => {
-      setLoading(true);
-      const from = page * responsesPerPage;
-      const to = (page + 1) * responsesPerPage - 1;
-
-      let query = supabase.from("inductionResponses").select("*", {
-        count: "exact",
-      });
-      if (statusFilter === "selected") {
-        query = query.eq("status", true);
-      } else if (statusFilter === "rejected") {
-        query = query.eq("status", false);
-      } else if (statusFilter === "waiting") {
-        query = query.is("status", null);
-      }
-      if (teamFilter !== "all") {
-        query = query.eq("team", teamFilter);
-      }
-
-      const { data, count, error } = await query.order("id", { ascending: false }).range(from, to);
-
-      if (error) {
-        setError(true);
-      } else {
-        setPreviousResponses(data || []);
-        if (!debouncedSearchTerm.trim()) {
-          setFilteredResponses(
-            (data || []).filter((d) => teamFilter === "all" || d.team === teamFilter),
-          );
-        }
-        setTotalResponses(count || 0);
-      }
-      setLoading(false);
-    };
-
-    fetchResponses();
-  }, [page, responsesPerPage, debouncedSearchTerm, statusFilter, teamFilter]);
-
-  useEffect(() => {
-    const fetchSearchResults = async () => {
-      const lowerCaseSearchTerm = debouncedSearchTerm.toLowerCase();
-
-      let searchQuery = supabase
-        .from("inductionResponses")
-        .select("*")
-        .or(`roll_no.ilike.%${lowerCaseSearchTerm}%,name.ilike.%${lowerCaseSearchTerm}%`);
-
-      if (statusFilter === "selected") {
-        searchQuery = searchQuery.eq("status", true);
-      } else if (statusFilter === "rejected") {
-        searchQuery = searchQuery.eq("status", false);
-      } else if (statusFilter === "waiting") {
-        searchQuery = searchQuery.is("status", null);
-      }
-      if (teamFilter !== "all") {
-        searchQuery = searchQuery.eq("team", teamFilter);
-      }
-
-      const { data: responsesForSearch, error } = await searchQuery;
-
-      if (error) {
-        console.error("Error fetching data:", error);
-        return;
-      }
-
-      setFilteredResponses(responsesForSearch || []);
-    };
-
-    if (debouncedSearchTerm.trim()) {
-      fetchSearchResults();
-    } else {
-      setFilteredResponses(
-        previousResponses.filter((d) => teamFilter === "all" || d.team === teamFilter),
-      );
-    }
-  }, [debouncedSearchTerm, previousResponses, statusFilter, teamFilter]);
-
   const deleteResponse = async () => {
     if (!responseToDelete) {
-      toast(
-        <div>
-          <strong>No Response Selected</strong>
-          <div>Please select a response to delete.</div>
-        </div>,
-      );
+      toast.error("No Response Selected");
       return;
     }
 
-    setLoading(true);
-
     try {
-      const { error } = await supabase
-        .from("inductionResponses")
-        .delete()
-        .eq("id", String(responseToDelete.id));
-
-      if (error) {
-        throw new Error(error.message);
-      }
-
-      setFilteredResponses((prevResponses) =>
-        prevResponses.filter((response) => response.id !== responseToDelete.id),
-      );
-
-      toast(
-        <div>
-          <strong>Deleted</strong>
-          <div>Response Deleted Successfully</div>
-        </div>,
-      );
-    } catch (error) {
-      toast(
-        <div>
-          <strong>Failed to Delete</strong>
-          <div>{error.message || "An error occurred while deleting the response."}</div>
-        </div>,
-      );
-    } finally {
+      await deleteInductionMutation.mutateAsync(String(responseToDelete.id));
       setResponseToDelete(null);
-      setLoading(false);
-    }
+    } catch {}
   };
 
   const updateResponseStatus = async (responseupdate, status) => {
-    setUpdatingStatusId(responseupdate.id);
-    setUpdatingStatusValue(status);
-
     try {
-      const { error } = await supabase
-        .from("inductionResponses")
-        .update({ status })
-        .eq("id", responseupdate.id)
-        .select();
-
-      if (error) {
-        throw error;
-      }
-
-      setFilteredResponses((prevResponses) =>
-        prevResponses.map((response) =>
-          response.id === responseupdate.id ? { ...response, status } : response,
-        ),
-      );
-
-      setPreviousResponses((prev) =>
-        prev.map((response) =>
-          response.id === responseupdate.id ? { ...response, status } : response,
-        ),
-      );
-
+      await updateInductionStatusMutation.mutateAsync({
+        id: responseupdate.id,
+        status,
+      });
       setResponseToView((prev) => (prev?.id === responseupdate.id ? { ...prev, status } : prev));
-
-      toast(
-        <div>
-          <strong>Updated!!</strong>
-          <div>Response Status Updated Successfully!!</div>
-        </div>,
-      );
-    } catch (err) {
-      console.error("Failed to update response status:", err);
-      toast(
-        <div>
-          <strong>Failed!!</strong>
-          <div>{err?.message || "Unable to update response status"}</div>
-        </div>,
-      );
-    } finally {
-      setUpdatingStatusId(null);
-      setUpdatingStatusValue(undefined);
-    }
+    } catch {}
   };
 
   const fetchFilteredResponses = async (type) => {

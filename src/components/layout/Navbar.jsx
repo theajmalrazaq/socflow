@@ -18,7 +18,7 @@ import {
   Settings as SettingsIcon,
 } from "lucide-react";
 import { useTheme } from "@/lib/theme-provider";
-import { supabase } from "@/lib/supabase";
+import { useUserSession, useLogoutMutation } from "@/hooks/queries/useAuth";
 import {
   canManageLeads,
   canManageEvents,
@@ -35,39 +35,10 @@ export function Navbar({ access, user, children }) {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const [userInfo, setUserInfo] = useState(user || null);
+  const { data: session } = useUserSession();
+  const logoutMutation = useLogoutMutation();
 
-  useEffect(() => {
-    if (user) {
-      setUserInfo(user);
-      return;
-    }
-    async function fetchUserFallback() {
-      try {
-        const {
-          data: { user: authUser },
-        } = await supabase.auth.getUser();
-        if (authUser) {
-          const { data: dbUsers } = await supabase
-            .from("users")
-            .select("*")
-            .or(`user_id.eq.${authUser.id},userId.eq.${authUser.id},email.eq.${authUser.email}`);
-
-          setUserInfo({
-            name:
-              dbUsers?.[0]?.name ||
-              authUser.user_metadata?.name ||
-              authUser.email?.split("@")[0] ||
-              "User",
-            email: authUser.email || "",
-          });
-        }
-      } catch (e) {
-        console.error("Error fetching user fallback in Navbar:", e);
-      }
-    }
-    fetchUserFallback();
-  }, [user]);
+  const userInfo = user || session?.user || null;
 
   const userInitials = useMemo(() => {
     if (userInfo?.name && userInfo.name.trim()) {
@@ -115,19 +86,14 @@ export function Navbar({ access, user, children }) {
   const handleSignOut = useCallback(async () => {
     setLoading(true);
     try {
-      const { error } = await supabase.auth.signOut();
-      if (error) {
-        console.error(error);
-      } else {
-        localStorage.removeItem("user-permissions");
-        navigate("/login");
-      }
+      await logoutMutation.mutateAsync();
+      navigate("/login");
     } catch (error) {
       console.error("An error occurred during sign-out:", error);
     } finally {
       setLoading(false);
     }
-  }, [navigate]);
+  }, [logoutMutation, navigate]);
 
   const toggleTheme = useCallback(() => {
     setTheme(theme === "dark" ? "light" : "dark");

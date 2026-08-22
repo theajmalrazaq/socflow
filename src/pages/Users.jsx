@@ -53,7 +53,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import Loading from "@/components/layout/Loading";
-import { supabase } from "@/lib/supabase";
 import {
   isAdmin,
   DEFAULT_PERMISSIONS,
@@ -324,20 +323,29 @@ function PermissionForm({
   );
 }
 
+import {
+  useUsersQuery,
+  useCreateUserMutation,
+  useUpdateUserMutation,
+  useDeleteUserMutation,
+} from "@/hooks/queries/useUsers";
+
 export function Users() {
   const navigate = useNavigate();
   const outlet = useOutletContext();
   const access = outlet?.permissions;
 
-  const [usersList, setUsersList] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [roleFilter, setRoleFilter] = useState("all");
+
+  const { data: usersList = [], isLoading: loading } = useUsersQuery();
+  const createUserMutation = useCreateUserMutation();
+  const updateUserMutation = useUpdateUserMutation();
+  const deleteUserMutation = useDeleteUserMutation();
 
   // Create User State
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [createStep, setCreateStep] = useState(1);
-  const [creating, setCreating] = useState(false);
   const [newUser, setNewUser] = useState({
     name: "",
     email: "",
@@ -355,11 +363,13 @@ export function Users() {
   // Edit User State
   const [editingUser, setEditingUser] = useState(null);
   const [editPermissions, setEditPermissions] = useState(DEFAULT_PERMISSIONS);
-  const [updating, setUpdating] = useState(false);
 
   // Delete User State
   const [deletingUser, setDeletingUser] = useState(null);
-  const [deleting, setDeleting] = useState(false);
+
+  const creating = createUserMutation.isPending;
+  const updating = updateUserMutation.isPending;
+  const deleting = deleteUserMutation.isPending;
 
   // Redirect users without user management permission
   useEffect(() => {
@@ -367,29 +377,6 @@ export function Users() {
       navigate("/nopermission");
     }
   }, [access, navigate]);
-
-  // Fetch Users List
-  const fetchUsers = async () => {
-    setLoading(true);
-    try {
-      const { data, error } = await supabase
-        .from("users")
-        .select("*")
-        .order("created_at", { ascending: false });
-
-      if (error) throw error;
-      setUsersList(data || []);
-    } catch (err) {
-      console.error("Error fetching users:", err);
-      toast.error("Failed to load users list");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchUsers();
-  }, []);
 
   // Master page toggle
   const togglePageMaster = (matrixSetter, pageKey, enabled) => {
@@ -525,72 +512,20 @@ export function Users() {
       return;
     }
 
-    setCreating(true);
     try {
-      let authData = null;
-      let authError = null;
-
-      // Try Admin API to auto-confirm user without sending confirmation email
-      try {
-        const adminRes = await supabase.auth.admin.createUser({
-          email: newUser.email,
-          password: newUser.password,
-          email_confirm: true,
-          user_metadata: {
-            name: newUser.name,
-            role: newUser.role,
-          },
-        });
-        authData = adminRes.data;
-        authError = adminRes.error;
-      } catch {
-        // Admin API not available on client key, fallback to signUp
-      }
-
-      if (authError || !authData?.user) {
-        const signUpRes = await supabase.auth.signUp({
-          email: newUser.email,
-          password: newUser.password,
-          options: {
-            data: {
-              name: newUser.name,
-              role: newUser.role,
-            },
-          },
-        });
-        authData = signUpRes.data;
-        authError = signUpRes.error;
-      }
-
-      if (authError) throw authError;
-
-      const userId = authData.user?.id;
-      const payload = {
-        userId: userId,
-        user_id: userId,
-        email: newUser.email,
+      await createUserMutation.mutateAsync({
         name: newUser.name,
-        permissions: JSON.stringify(permissionMatrix),
+        email: newUser.email,
+        password: newUser.password,
         role: newUser.role,
-        createdAt: new Date().toISOString(),
-        created_at: new Date().toISOString(),
-      };
+        permissionMatrix,
+      });
 
-      const { error: dbError } = await supabase.from("users").insert([payload]);
-      if (dbError) throw dbError;
-
-      toast.success(`User ${newUser.name} created successfully!`);
       setIsCreateOpen(false);
       setCreateStep(1);
       setNewUser({ name: "", email: "", password: "", role: "custom" });
       setPermissionMatrix(DEFAULT_PERMISSIONS);
-      fetchUsers();
-    } catch (err) {
-      console.error("Create User Error:", err);
-      toast.error(err.message || "Failed to create user");
-    } finally {
-      setCreating(false);
-    }
+    } catch {}
   };
 
   // Handle Edit User
@@ -602,44 +537,23 @@ export function Users() {
 
   const handleUpdateUserPermissions = async () => {
     if (!editingUser) return;
-    setUpdating(true);
     try {
-      const { error } = await supabase
-        .from("users")
-        .update({
-          permissions: JSON.stringify(editPermissions),
-          role: editingUser.role || "custom",
-        })
-        .eq("id", editingUser.id);
-
-      if (error) throw error;
-
-      toast.success(`Updated permissions for ${editingUser.name}`);
+      await updateUserMutation.mutateAsync({
+        id: editingUser.id,
+        permissions: editPermissions,
+        role: editingUser.role || "custom",
+      });
       setEditingUser(null);
-      fetchUsers();
-    } catch (err) {
-      toast.error(err.message || "Failed to update permissions");
-    } finally {
-      setUpdating(false);
-    }
+    } catch {}
   };
 
   // Handle Delete User
   const handleDeleteUser = async () => {
     if (!deletingUser) return;
-    setDeleting(true);
     try {
-      const { error } = await supabase.from("users").delete().eq("id", deletingUser.id);
-      if (error) throw error;
-
-      toast.success(`Deleted user ${deletingUser.name}`);
+      await deleteUserMutation.mutateAsync(deletingUser);
       setDeletingUser(null);
-      fetchUsers();
-    } catch (err) {
-      toast.error(err.message || "Failed to delete user");
-    } finally {
-      setDeleting(false);
-    }
+    } catch {}
   };
 
   const filteredUsers = usersList.filter((u) => {

@@ -59,30 +59,26 @@ import { sendContactResponseEmail } from "@/lib/emailService.jsx";
 import { useOutletContext } from "react-router-dom";
 import { canManageEmails, hasPermission } from "@/lib/permissions";
 
+import {
+  useEmailsQuery,
+  useUpdateEmailStatusMutation,
+  useDeleteEmailMutation,
+} from "@/hooks/queries/useEmails";
+
 export function Emails() {
   const navigateto = useNavigate();
   const outlet = useOutletContext();
   const access = outlet?.permissions;
-  const [filteredResponses, setFilteredResponses] = useState([]);
-  const [error, setError] = useState(null);
-  const [responseToDelete, setResponseToDelete] = useState(null);
-  const [loading, setLoading] = useState(false);
+
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [exportFilter, setExportFilter] = useState("all");
   const [page, setPage] = useState(0);
-  const [totalResponses, setTotalResponses] = useState(0);
-  const [previousResponses, setPreviousResponses] = useState([]);
   const [responseToView, setResponseToView] = useState(null);
   const [responseToReply, setResponseToReply] = useState(null);
   const [replyMessage, setReplyMessage] = useState("");
   const [sendingReply, setSendingReply] = useState(false);
-
-  // Granular loading states
-  const [updatingStatusId, setUpdatingStatusId] = useState(null);
-  const [updatingStatusValue, setUpdatingStatusValue] = useState(undefined);
-  const [_deletingId, setDeletingId] = useState(null);
-
+  const [responseToDelete, setResponseToDelete] = useState(null);
   const responsesPerPage = 10;
 
   const useDebounce = (value, delay) => {
@@ -103,155 +99,48 @@ export function Emails() {
 
   const debouncedSearchTerm = useDebounce(searchTerm, 500);
 
-  useEffect(() => {
-    const fetchResponses = async () => {
-      setLoading(true);
+  const {
+    data: emailsData,
+    isLoading: loading,
+    isError: error,
+  } = useEmailsQuery({
+    page,
+    limit: responsesPerPage,
+    status: statusFilter,
+    search: debouncedSearchTerm,
+  });
 
-      const from = page * responsesPerPage;
-      const to = (page + 1) * responsesPerPage - 1;
+  const updateEmailStatusMutation = useUpdateEmailStatusMutation();
+  const deleteEmailMutation = useDeleteEmailMutation();
 
-      let query = supabase.from("contactResponses").select("*", {
-        count: "exact",
-      });
+  const filteredResponses = emailsData?.data || [];
+  const totalResponses = emailsData?.total || 0;
 
-      if (statusFilter === "responded") {
-        query = query.eq("status", true);
-      } else if (statusFilter === "on_hold") {
-        query = query.eq("status", false);
-      } else if (statusFilter === "waiting") {
-        query = query.is("status", null);
-      }
-
-      let { data, count, error } = await query.order("id", { ascending: false }).range(from, to);
-
-      if (error) {
-        setError(true);
-      } else {
-        setPreviousResponses(data || []);
-        if (!debouncedSearchTerm.trim()) {
-          setFilteredResponses(data || []);
-        }
-        setTotalResponses(count || 0);
-      }
-      setLoading(false);
-    };
-
-    fetchResponses();
-  }, [page, responsesPerPage, debouncedSearchTerm, statusFilter]);
-
-  useEffect(() => {
-    const fetchSearchResults = async () => {
-      const lowerCaseSearchTerm = debouncedSearchTerm.toLowerCase();
-
-      let searchQuery = supabase
-        .from("contactResponses")
-        .select("*")
-        .or(
-          `Name.ilike.%${lowerCaseSearchTerm}%,Email.ilike.%${lowerCaseSearchTerm}%,Subject.ilike.%${lowerCaseSearchTerm}%`,
-        );
-
-      if (statusFilter === "responded") {
-        searchQuery = searchQuery.eq("status", true);
-      } else if (statusFilter === "on_hold") {
-        searchQuery = searchQuery.eq("status", false);
-      } else if (statusFilter === "waiting") {
-        searchQuery = searchQuery.is("status", null);
-      }
-
-      const { data: responsesForSearch, error } = await searchQuery;
-
-      if (error) {
-        console.error("Error fetching data:", error);
-        return;
-      }
-
-      setFilteredResponses(responsesForSearch);
-    };
-
-    if (debouncedSearchTerm.trim()) {
-      fetchSearchResults();
-    } else {
-      setFilteredResponses(previousResponses);
-    }
-  }, [debouncedSearchTerm, previousResponses, statusFilter]);
+  // Granular loading states
+  const updatingStatusId = updateEmailStatusMutation.isPending
+    ? updateEmailStatusMutation.variables?.id
+    : null;
+  const updatingStatusValue = updateEmailStatusMutation.isPending
+    ? updateEmailStatusMutation.variables?.status
+    : undefined;
+  const _deletingId = deleteEmailMutation.isPending ? responseToDelete?.id : null;
 
   const updateResponseStatus = async (responseupdate, status) => {
-    setUpdatingStatusId(responseupdate.id);
-    setUpdatingStatusValue(status);
-
     try {
-      const { error } = await supabase
-        .from("contactResponses")
-        .update({ status })
-        .eq("id", responseupdate.id);
-
-      if (error) throw error;
-
-      setFilteredResponses((prevResponses) =>
-        prevResponses.map((response) =>
-          response.id === responseupdate.id ? { ...response, status } : response,
-        ),
-      );
-
-      setPreviousResponses((prev) =>
-        prev.map((response) =>
-          response.id === responseupdate.id ? { ...response, status } : response,
-        ),
-      );
-
+      await updateEmailStatusMutation.mutateAsync({
+        id: responseupdate.id,
+        status,
+      });
       setResponseToView((prev) => (prev?.id === responseupdate.id ? { ...prev, status } : prev));
-
-      toast(
-        <div>
-          <strong>Updated!!</strong>
-          <div>Status Updated Successfully!!</div>
-        </div>,
-      );
-    } catch (err) {
-      console.error("Failed to update status:", err);
-      toast(
-        <div>
-          <strong>Failed!!</strong>
-          <div>{err?.message || "Unable to update status"}</div>
-        </div>,
-      );
-    } finally {
-      setUpdatingStatusId(null);
-      setUpdatingStatusValue(undefined);
-    }
+    } catch {}
   };
 
   const deleteResponse = async () => {
     if (!responseToDelete) return;
-    setDeletingId(responseToDelete.id);
-    const { error } = await supabase
-      .from("contactResponses")
-      .delete()
-      .eq("id", String(responseToDelete.id));
-
-    if (error) {
-      toast(
-        <div>
-          <strong>Failed!!</strong>
-          <div>Unable to delete response</div>
-        </div>,
-      );
-    } else {
-      setFilteredResponses((prevResponses) =>
-        prevResponses.filter((response) => response.id !== responseToDelete.id),
-      );
-      setPreviousResponses((prevResponses) =>
-        prevResponses.filter((response) => response.id !== responseToDelete.id),
-      );
+    try {
+      await deleteEmailMutation.mutateAsync(String(responseToDelete.id));
       setResponseToDelete(null);
-      toast(
-        <div>
-          <strong>Deleted!!</strong>
-          <div>Response deleted successfully.</div>
-        </div>,
-      );
-    }
-    setDeletingId(null);
+    } catch {}
   };
 
   const fetchFilteredResponses = async (type) => {

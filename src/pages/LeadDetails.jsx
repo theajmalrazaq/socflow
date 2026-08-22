@@ -58,6 +58,12 @@ import {
 } from "@/components/ui/dialog";
 import { supabase } from "@/lib/supabase";
 import { canManageLeads, hasPermission } from "@/lib/permissions";
+import {
+  useLeadMembersQuery,
+  useCreateLeadMemberMutation,
+  useUpdateLeadMemberMutation,
+  useDeleteLeadMemberMutation,
+} from "@/hooks/queries/useLeads";
 
 export function LeadDetails() {
   const navigate = useNavigate();
@@ -73,14 +79,10 @@ export function LeadDetails() {
     }
   }, [permissions, navigate]);
 
-  const [leads, setLeads] = useState([]);
-  const [filteredLeads, setFilteredLeads] = useState([]);
-  const [_fetchError, setFetchError] = useState(null);
-  const [leadToDelete, setLeadToDelete] = useState(null);
-  const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [page, setPage] = useState(0);
-  const [totalLeads, setTotalLeads] = useState(0);
+  const leadsPerPage = 10;
+  const [leadToDelete, setLeadToDelete] = useState(null);
   const [newLeadMember, setNewLeadMember] = useState({
     name: "",
     roll_no: "",
@@ -95,14 +97,28 @@ export function LeadDetails() {
   const [isupdating, setIsUpdating] = useState(false);
   const [exportFilter, setExportFilter] = useState("all");
 
-  // Granular loading states
-  const [updatingStatusId, setUpdatingStatusId] = useState(null);
-  const [updatingStatusValue, setUpdatingStatusValue] = useState(undefined);
-  const [deletingId, setDeletingId] = useState(null);
-  const [creatingMember, setCreatingMember] = useState(false);
-  const [updatingMember, setUpdatingMember] = useState(false);
+  const { data: membersData, isLoading: loading } = useLeadMembersQuery({
+    leadId: lead_id,
+    page,
+    limit: leadsPerPage,
+    search: searchTerm,
+  });
 
-  const leadsPerPage = 10;
+  const createMemberMutation = useCreateLeadMemberMutation(lead_id);
+  const updateMemberMutation = useUpdateLeadMemberMutation(lead_id);
+  const deleteMemberMutation = useDeleteLeadMemberMutation(lead_id);
+
+  const leads = membersData?.data || [];
+  const filteredLeads = leads;
+  const totalLeads = membersData?.total || 0;
+
+  // Granular loading states
+  const updatingStatusId = updateMemberMutation.isPending
+    ? updateMemberMutation.variables?.id
+    : null;
+  const deletingId = deleteMemberMutation.isPending ? leadToDelete?.id : null;
+  const creatingMember = createMemberMutation.isPending;
+  const updatingMember = updateMemberMutation.isPending;
 
   useEffect(() => {
     if (isupdating && idtoupdate) {
@@ -118,125 +134,28 @@ export function LeadDetails() {
     }
   }, [isupdating, idtoupdate]);
 
-  useEffect(() => {
-    const fetchLeads = async () => {
-      setLoading(true);
-
-      const { data, error, count } = await supabase
-        .from("leadsData")
-        .select("*", { count: "exact" })
-        .range(page * leadsPerPage, (page + 1) * leadsPerPage - 1)
-        .eq("lead_id", lead_id)
-        .order("id", { ascending: true });
-
-      if (error) {
-        setFetchError(error);
-        console.error(error);
-      } else {
-        setLeads(data || []);
-        setFilteredLeads(data || []);
-        setTotalLeads(count || 0);
-      }
-      setLoading(false);
-    };
-
-    if (lead_id) {
-      fetchLeads();
-    }
-  }, [page, leadsPerPage, lead_id]);
-
-  useEffect(() => {
-    const lowerCaseSearchTerm = searchTerm.toLowerCase();
-    setFilteredLeads(
-      leads.filter((lead) =>
-        Object.values(lead).some(
-          (value) => typeof value === "string" && value.toLowerCase().includes(lowerCaseSearchTerm),
-        ),
-      ),
-    );
-  }, [searchTerm, leads]);
-
   const handleStatusUpdate = async (id, status) => {
-    setUpdatingStatusId(id);
-    setUpdatingStatusValue(status);
-    const { error } = await supabase.from("leadsData").update({ status }).eq("id", String(id));
-    if (error) {
-      toast(
-        <div>
-          <strong>Failed!!</strong>
-          <div>Unable to update status</div>
-        </div>,
-      );
-    } else {
-      setLeads((prevLeads) =>
-        prevLeads.map((lead) => (lead.id === id ? { ...lead, status } : lead)),
-      );
-      setFilteredLeads((prevLeads) =>
-        prevLeads.map((lead) => (lead.id === id ? { ...lead, status } : lead)),
-      );
-      toast(
-        <div>
-          <strong>Updated!!</strong>
-          <div>Status Updated Successfully!!</div>
-        </div>,
-      );
-    }
-    setUpdatingStatusId(null);
-    setUpdatingStatusValue(undefined);
+    try {
+      await updateMemberMutation.mutateAsync({ id: String(id), status });
+    } catch {}
   };
 
   const deleteLead = async () => {
     if (!leadToDelete) return;
-    setDeletingId(leadToDelete.id);
-    const { error } = await supabase.from("leadsData").delete().eq("id", String(leadToDelete.id));
-    if (error) {
-      toast(
-        <div>
-          <strong>Failed!!</strong>
-          <div>Unable to delete lead</div>
-        </div>,
-      );
-    } else {
-      setLeads((prevLeads) => prevLeads.filter((lead) => lead.id !== leadToDelete.id));
-      setFilteredLeads((prevLeads) => prevLeads.filter((lead) => lead.id !== leadToDelete.id));
+    try {
+      await deleteMemberMutation.mutateAsync(String(leadToDelete.id));
       setLeadToDelete(null);
-      toast(
-        <div>
-          <strong>Deleted!!</strong>
-          <div>Lead deleted successfully.</div>
-        </div>,
-      );
-    }
-    setDeletingId(null);
+    } catch {}
   };
 
   const handleCreateNewLead = async () => {
     if (!newLeadMember.name) {
-      toast(
-        <div>
-          <strong>Error</strong>
-          <div>Name cannot be empty.</div>
-        </div>,
-      );
+      toast.error("Name cannot be empty.");
       return;
     }
 
-    setCreatingMember(true);
-    const { data, error } = await supabase
-      .from("leadsData")
-      .insert([{ ...newLeadMember, lead_id }])
-      .select("*");
-
-    if (error) {
-      toast(
-        <div>
-          <strong>Failed!!</strong>
-          <div>Failed to create new member.</div>
-        </div>,
-      );
-    } else {
-      setLeads((prevLeads) => [...prevLeads, data[0]]);
-      setFilteredLeads((prev) => [...prev, data[0]]);
+    try {
+      await createMemberMutation.mutateAsync(newLeadMember);
       setNewLeadMember({
         name: "",
         roll_no: "",
@@ -246,49 +165,29 @@ export function LeadDetails() {
         linkedin: "",
         avatar: "",
       });
-      toast(
-        <div>
-          <strong>Success!!</strong>
-          <div>New member created successfully.</div>
-        </div>,
-      );
       setIsCreatingNewMember(false);
-    }
-    setCreatingMember(false);
+    } catch {}
   };
 
   const handleUpdateLead = async () => {
-    setUpdatingMember(true);
-    const { data, error } = await supabase
-      .from("leadsData")
-      .update({ ...newLeadMember })
-      .eq("id", String(idtoupdate.id))
-      .select("*");
-
-    if (error) {
-      toast(
-        <div>
-          <strong>Failed!!</strong>
-          <div>Failed to update member.</div>
-        </div>,
-      );
-    } else {
-      setLeads((prevLeads) =>
-        prevLeads.map((lead) => (lead.id === idtoupdate.id ? { ...lead, ...data[0] } : lead)),
-      );
-      setFilteredLeads((prevLeads) =>
-        prevLeads.map((lead) => (lead.id === idtoupdate.id ? { ...lead, ...data[0] } : lead)),
-      );
-      toast(
-        <div>
-          <strong>Success!!</strong>
-          <div>Member updated successfully.</div>
-        </div>,
-      );
+    if (!idtoupdate) return;
+    try {
+      await updateMemberMutation.mutateAsync({
+        id: String(idtoupdate.id),
+        ...newLeadMember,
+      });
       setIsUpdating(false);
       setidtoupdate(null);
-    }
-    setUpdatingMember(false);
+      setNewLeadMember({
+        name: "",
+        roll_no: "",
+        nu_email: "",
+        whatsapp_no: "",
+        designation: "",
+        linkedin: "",
+        avatar: "",
+      });
+    } catch {}
   };
 
   const handleExportCSV = async (statusFilter) => {

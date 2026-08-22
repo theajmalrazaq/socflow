@@ -1,7 +1,6 @@
-import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 import { hasPermission } from "@/lib/permissions";
-import { useState, useEffect, useMemo } from "react";
+import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
 import { useOutletContext } from "react-router-dom";
 import {
@@ -47,106 +46,48 @@ import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { sendInductionEmail } from "@/lib/emailService.jsx";
 
+import { useAppSettingsQuery, useUpdateAppSettingsMutation } from "@/hooks/queries/useAppSettings";
+import { useDashboardDataQuery } from "@/hooks/queries/useDashboard";
+
 export function Home() {
   const outlet = useOutletContext();
   const access = outlet?.permissions;
-  const [responses, setResponses] = useState([]);
-  const [inductionResponses, setInductionResponses] = useState([]);
-  const [inductionAccepted, setInductionAccepted] = useState(0);
-  const [membersResponses, setmembersResponses] = useState([]);
-  const [membersactive, setmembersactive] = useState(0);
-  const [rawEventResponses, setRawEventResponses] = useState([]);
-  const [rawCompResponses, setRawCompResponses] = useState([]);
-  const [loading, setloading] = useState(true);
+
+  const { data: dashboardData, isLoading: dashboardLoading } = useDashboardDataQuery();
+  const { data: appSettings, isLoading: settingsLoading } = useAppSettingsQuery();
+  const updateSettingsMutation = useUpdateAppSettingsMutation();
+
+  const responses = dashboardData?.events || [];
+  const rawEventResponses = dashboardData?.rawEventResponses || [];
+  const rawCompResponses = dashboardData?.rawCompResponses || [];
+  const inductionResponses = dashboardData?.inductionResponses || [];
+  const inductionAccepted = dashboardData?.inductionAccepted || 0;
+  const membersResponses = dashboardData?.membersResponses || [];
+  const membersactive = dashboardData?.membersActive || 0;
+  const totalRegistrations = dashboardData?.totalRegistrations || 0;
+  const loading = dashboardLoading || settingsLoading;
+
   const [timeRange, setTimeRange] = useState("90d");
   const [bottomTab, setBottomTab] = useState("events");
 
-  const totalRegistrations = useMemo(() => {
-    return (
-      rawEventResponses.length + rawCompResponses.length ||
-      responses.reduce((sum, r) => sum + (r.responseCount || 0), 0)
-    );
-  }, [rawEventResponses, rawCompResponses, responses]);
-
   const featuredUpcomingEvent = responses.length ? [responses[0]] : [];
 
-  const [_appSettingsId, setAppSettingsId] = useState(null);
-  const [inductionEnabled, setInductionEnabled] = useState(true);
-  const [upcomingEventEnabled, setUpcomingEventEnabled] = useState(false);
-  const [upcomingEventStatus, setUpcomingEventStatus] = useState(true);
+  const inductionEnabled = Boolean(appSettings?.induction);
+  const upcomingEventEnabled = Boolean(appSettings?.upcomingevent);
+  const upcomingEventStatus = Boolean(appSettings?.upcomingeventstatus);
+  const settingsUpdating = updateSettingsMutation.isPending;
 
   // Induction Email Dialog State
   const [isInductionEmailDialogOpen, setIsInductionEmailDialogOpen] = useState(false);
   const [inductionEmails, setInductionEmails] = useState("");
   const [inductionDeadline, setInductionDeadline] = useState(undefined);
   const [sendingInductionEmails, setSendingInductionEmails] = useState(false);
-  const [settingsUpdating, setSettingsUpdating] = useState(false);
-
-  useEffect(() => {
-    async function fetchAppSettings() {
-      try {
-        const { data } = await supabase.from("appSettings").select("*").limit(1).single();
-
-        if (data) {
-          setAppSettingsId(data.id);
-          setInductionEnabled(Boolean(data.induction));
-          setUpcomingEventEnabled(Boolean(data.upcomingevent));
-          setUpcomingEventStatus(Boolean(data.upcomingeventstatus));
-        }
-      } catch (err) {
-        console.error("Failed to fetch appSettings:", err);
-      }
-    }
-
-    fetchAppSettings();
-  }, []);
-
-  const upsertAppSettings = async (patch) => {
-    setSettingsUpdating(true);
-    try {
-      const payload = {
-        induction: inductionEnabled,
-        upcomingevent: upcomingEventEnabled,
-        upcomingeventstatus: upcomingEventStatus,
-        ...patch,
-      };
-
-      const { data: existing } = await supabase.from("appSettings").select("id").limit(1);
-
-      let resError = null;
-      if (existing && existing.length > 0) {
-        const { error } = await supabase
-          .from("appSettings")
-          .update(payload)
-          .eq("id", existing[0].id);
-        resError = error;
-      } else {
-        const { data: inserted, error } = await supabase
-          .from("appSettings")
-          .insert([payload])
-          .select();
-        resError = error;
-        if (inserted && inserted.length > 0) {
-          setAppSettingsId(inserted[0].id);
-        }
-      }
-
-      if (resError) throw resError;
-      toast.success("Settings updated successfully");
-    } catch (err) {
-      console.error("Error updating appSettings:", err);
-      toast.error("Failed to update settings");
-    } finally {
-      setSettingsUpdating(false);
-    }
-  };
 
   const toggleInduction = (checked) => {
     if (checked) {
       setIsInductionEmailDialogOpen(true);
     } else {
-      setInductionEnabled(false);
-      upsertAppSettings({ induction: false });
+      updateSettingsMutation.mutate({ induction: false });
     }
   };
 
@@ -176,8 +117,7 @@ export function Home() {
         throw new Error(result.error || "Failed to send emails");
       }
 
-      setInductionEnabled(true);
-      await upsertAppSettings({ induction: true });
+      await updateSettingsMutation.mutateAsync({ induction: true });
 
       toast.success(`Sent induction emails to ${result.sent} recipient(s)!`);
       setIsInductionEmailDialogOpen(false);
@@ -191,101 +131,13 @@ export function Home() {
     }
   };
 
-  const toggleUpcomingEvent = async () => {
-    const newVal = !upcomingEventEnabled;
-    setUpcomingEventEnabled(newVal);
-    await upsertAppSettings({ upcomingevent: newVal });
+  const toggleUpcomingEvent = () => {
+    updateSettingsMutation.mutate({ upcomingevent: !upcomingEventEnabled });
   };
 
-  const toggleUpcomingEventRegistration = async () => {
-    const newVal = !upcomingEventStatus;
-    setUpcomingEventStatus(newVal);
-    await upsertAppSettings({ upcomingeventstatus: newVal });
+  const toggleUpcomingEventRegistration = () => {
+    updateSettingsMutation.mutate({ upcomingeventstatus: !upcomingEventStatus });
   };
-
-  // Fetch real events and all real response records
-  useEffect(() => {
-    async function fetchData() {
-      try {
-        const today = new Date().toISOString().split("T")[0];
-        const { data: fetchEvents, error: fetchEventsError } = await supabase
-          .from("events")
-          .select("*")
-          .lt("date", today)
-          .order("date", { ascending: false })
-          .limit(10);
-
-        if (fetchEventsError) {
-          toast.error("Unable to fetch events.");
-          return;
-        }
-
-        // Fetch real individual response rows with created_at timestamps
-        const [evResResult, compResResult] = await Promise.all([
-          supabase.from("eventsResponses").select("id, event_id, created_at"),
-          supabase.from("competitionsResponses").select("id, event_id, created_at"),
-        ]);
-
-        const evResponses = evResResult.data || [];
-        const compResponses = compResResult.data || [];
-
-        setRawEventResponses(evResponses);
-        setRawCompResponses(compResponses);
-
-        // Count per event
-        const responsesWithCount = (fetchEvents || []).map((event) => {
-          const count = event.is_competition
-            ? compResponses.filter((r) => r.event_id === event.id).length
-            : evResponses.filter((r) => r.event_id === event.id).length;
-
-          return {
-            ...event,
-            responseCount: count,
-          };
-        });
-
-        setResponses(responsesWithCount);
-      } catch (err) {
-        console.error("Error fetching home data:", err);
-      } finally {
-        setloading(false);
-      }
-    }
-
-    fetchData();
-  }, []);
-
-  useEffect(() => {
-    async function fetchInductionResponses() {
-      const { data: fetchInduction, error } = await supabase
-        .from("inductionResponses")
-        .select("id, created_at, status, domain")
-        .order("id", { ascending: false });
-      if (!error && fetchInduction) {
-        setInductionResponses(fetchInduction);
-        const accepted = fetchInduction.filter((r) => r.status === true).length;
-        setInductionAccepted(accepted);
-      }
-    }
-
-    fetchInductionResponses();
-  }, []);
-
-  useEffect(() => {
-    async function fetchmembersResponses() {
-      const { data: fetchMembers, error } = await supabase
-        .from("members")
-        .select("id, status")
-        .order("id", { ascending: false });
-      if (!error && fetchMembers) {
-        setmembersResponses(fetchMembers);
-        const active = fetchMembers.filter((m) => m.status).length;
-        setmembersactive(active);
-      }
-    }
-
-    fetchmembersResponses();
-  }, []);
 
   const selectionRate =
     inductionResponses.length > 0

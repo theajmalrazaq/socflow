@@ -2,7 +2,8 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
-import { LoginForm } from "@/components/login-form";
+import { queryClient } from "@/lib/queryClient";
+import { USER_SESSION_QUERY_KEY } from "@/hooks/queries/useAuth";
 
 export function Login() {
   const navigate = useNavigate();
@@ -21,6 +22,7 @@ export function Login() {
         password: password ? String(password) : "",
       });
       if (error) throw error;
+      await queryClient.invalidateQueries({ queryKey: USER_SESSION_QUERY_KEY });
       navigate("/");
     } catch (err) {
       toast(

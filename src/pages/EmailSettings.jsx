@@ -52,8 +52,6 @@ import {
   getEmailConfig,
   saveEmailConfig,
   resetEmailConfig,
-  saveSmtpConfig,
-  fetchSmtpConfigFromDB,
 } from "@/lib/emailConfig";
 import { renderEmailTemplate, sendEmail } from "@/lib/emailService";
 import { canManageEmailSettings, canManageEmails } from "@/lib/permissions";
@@ -123,6 +121,12 @@ const TEMPLATE_OPTIONS = [
   { id: "contact", label: "Contact Reply" },
 ];
 
+import {
+  useSocietyProfileQuery,
+  useSmtpConfigQuery,
+  useUpdateSmtpConfigMutation,
+} from "@/hooks/queries/useSettings";
+
 export function EmailSettings() {
   const navigate = useNavigate();
   const outlet = useOutletContext();
@@ -135,7 +139,6 @@ export function EmailSettings() {
   }, [access, navigate]);
 
   const [activeSection, setActiveSection] = useState("society_profile");
-  const [loading, setLoading] = useState(true);
   const [formData, setFormData] = useState(() => getEmailConfig());
   const [selectedTemplate, setSelectedTemplate] = useState("announcement");
   const [viewMode, setViewMode] = useState("desktop");
@@ -149,7 +152,13 @@ export function EmailSettings() {
   const [sendingTest, setSendingTest] = useState(false);
   const [, startTransition] = useTransition();
 
-  // Society & Account Profile State from DB
+  const { data: loadedProfile, isLoading: profileLoading } = useSocietyProfileQuery();
+  const { data: loadedSmtp, isLoading: smtpLoading } = useSmtpConfigQuery();
+  const updateSmtpMutation = useUpdateSmtpConfigMutation();
+
+  const loading = profileLoading || smtpLoading;
+
+  // Society & Account Profile State
   const [societyData, setSocietyData] = useState({
     id: null,
     name: "",
@@ -164,7 +173,7 @@ export function EmailSettings() {
     websiteUrl: "",
   });
 
-  // SMTP & Delivery Credentials State (BYO Gmail / SMTP)
+  // SMTP & Delivery Credentials State
   const [smtpData, setSmtpData] = useState({
     user: "",
     pass: "",
@@ -174,94 +183,20 @@ export function EmailSettings() {
     fromName: "",
   });
   const [showSmtpPassword, setShowSmtpPassword] = useState(false);
-  const [isSavingSmtp, setIsSavingSmtp] = useState(false);
+  const isSavingSmtp = updateSmtpMutation.isPending;
   const [testingSmtp, setTestingSmtp] = useState(false);
 
-  // Fetch Society, User & SMTP from Supabase on mount
   useEffect(() => {
-    async function loadSocietyAndUser() {
-      try {
-        setLoading(true);
-        const {
-          data: { user },
-        } = await supabase.auth.getUser();
-
-        // Fetch SMTP config from DB
-        const loadedSmtp = await fetchSmtpConfigFromDB();
-        if (loadedSmtp) {
-          setSmtpData({
-            user: loadedSmtp.user || "",
-            pass: loadedSmtp.pass || "",
-            host: loadedSmtp.host || "smtp.gmail.com",
-            port: loadedSmtp.port || 465,
-            secure: loadedSmtp.secure !== undefined ? loadedSmtp.secure : true,
-            fromName: loadedSmtp.fromName || "",
-          });
-        }
-
-        if (!user) return;
-
-        // Fetch User record
-        const { data: userRecords } = await supabase
-          .from("users")
-          .select("*")
-          .or(`user_id.eq.${user.id},userId.eq.${user.id},email.eq.${user.email}`);
-
-        const currentU = userRecords && userRecords[0] ? userRecords[0] : null;
-
-        // Fetch Society record
-        let currentSoc = null;
-        if (currentU?.society_id) {
-          const { data: soc } = await supabase
-            .from("societies")
-            .select("*")
-            .eq("id", currentU.society_id)
-            .single();
-          currentSoc = soc;
-        } else if (currentU?.society_username) {
-          const { data: soc } = await supabase
-            .from("societies")
-            .select("*")
-            .eq("username", currentU.society_username)
-            .single();
-          currentSoc = soc;
-        } else {
-          const { data: socList } = await supabase
-            .from("societies")
-            .select("*")
-            .order("created_at", { ascending: false })
-            .limit(1);
-          if (socList && socList.length > 0) currentSoc = socList[0];
-        }
-
-        const cfg = getEmailConfig();
-
-        setSocietyData({
-          id: currentSoc?.id || null,
-          name: currentSoc?.name || cfg.brandName || user.user_metadata?.society_name || "",
-          username:
-            currentSoc?.username ||
-            currentU?.society_username ||
-            user.user_metadata?.society_username ||
-            "",
-          email: currentSoc?.email || user.email || cfg.supportEmail || "",
-          adminName: currentU?.name || user.user_metadata?.name || user.email?.split("@")[0] || "",
-          logoUrl: currentSoc?.logo_url || cfg.logoUrl || "",
-          coverUrl: currentSoc?.cover_url || cfg.bannerUrl || "",
-          brandingColor: currentSoc?.branding_color || cfg.primaryColor || "#2A43F8",
-          instagramUrl: currentSoc?.instagram_url || cfg.instagramUrl || "",
-          linkedinUrl: currentSoc?.linkedin_url || cfg.linkedinUrl || "",
-          websiteUrl: currentSoc?.website_url || cfg.websiteUrl || "",
-        });
-      } catch (err) {
-        console.warn("Could not load society data from Supabase:", err);
-      } finally {
-        setLoading(false);
-      }
+    if (loadedProfile) {
+      setSocietyData(loadedProfile);
     }
+  }, [loadedProfile]);
 
-    loadSocietyAndUser();
-  }, []);
+  useEffect(() => {
+    if (loadedSmtp) {
+      setSmtpData(loadedSmtp);
+    }
+  }, [loadedSmtp]);
 
   // Re-render email HTML for preview
   const updatePreview = useCallback(async (currentConfig, templateId) => {
@@ -428,11 +363,10 @@ export function EmailSettings() {
       toast.error("Google App Password is required");
       return;
     }
-    setIsSavingSmtp(true);
     try {
       const portNum = Number(smtpData.port) || 465;
       const isSecure = portNum === 465 ? true : Boolean(smtpData.secure);
-      await saveSmtpConfig({
+      await updateSmtpMutation.mutateAsync({
         user: smtpData.user.trim(),
         pass: smtpData.pass.trim().replace(/\s+/g, ""),
         host: smtpData.host.trim() || "smtp.gmail.com",
@@ -440,13 +374,7 @@ export function EmailSettings() {
         secure: isSecure,
         fromName: smtpData.fromName.trim() || formData.brandName || "Society Team",
       });
-      toast.success("Custom SMTP credentials saved to database!");
-    } catch (err) {
-      console.error("Failed to save SMTP config:", err);
-      toast.error(err.message || "Failed to save SMTP credentials");
-    } finally {
-      setIsSavingSmtp(false);
-    }
+    } catch {}
   };
 
   const handleTestSmtpConnection = async () => {

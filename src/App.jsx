@@ -18,11 +18,13 @@ import { ErrorPage } from "./pages/ErrorPage";
 import { NoPermission } from "./pages/NoPermission";
 import { RootLayout } from "./components/layout/RootLayout";
 import { Toaster } from "@/components/ui/sonner";
-import { ThemeProvider } from "@/lib/theme-provider";
+import { QueryClientProvider } from "@tanstack/react-query";
+import { queryClient } from "@/lib/queryClient";
 
 function App() {
   return (
-    <ThemeProvider attribute="class" defaultTheme="light" enableSystem storageKey="vite-ui-theme">
+    <QueryClientProvider client={queryClient}>
+      <ThemeProvider attribute="class" defaultTheme="light" enableSystem storageKey="vite-ui-theme">
       <div className="App">
         <BrowserRouter
           future={{
@@ -87,6 +89,7 @@ function App() {
       {/* Portal Toaster outside #root so dialog backdrop-filters never cover it */}
       {createPortal(<Toaster />, document.getElementById("sonner-root"))}
     </ThemeProvider>
+    </QueryClientProvider>
   );
 }
 

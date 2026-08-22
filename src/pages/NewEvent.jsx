@@ -1,10 +1,10 @@
-import { useNavigate, useOutletContext, Navigate } from "react-router-dom";
+import { useNavigate, useOutletContext } from "react-router-dom";
 import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
-import { Card, CardContent, CardFooter } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 import {
@@ -35,6 +35,7 @@ import {
   Loader,
 } from "lucide-react";
 import { sendBulkEmails } from "@/lib/emailService.jsx";
+import { useCreateEventMutation } from "@/hooks/queries/useEvents";
 import { Calendar as DateCalendar } from "@/components/ui/calendar";
 import {
   Select,
@@ -52,6 +53,7 @@ export function NewEvent() {
   const outlet = useOutletContext();
   const access = outlet?.permissions;
   const descriptionRef = useRef(null);
+  const createEventMutation = useCreateEventMutation();
 
   const [title, setTitle] = useState("");
   const [date, setDate] = useState(undefined);
@@ -150,29 +152,20 @@ export function NewEvent() {
       const formattedTime = formatTime();
       const formattedDate = date ? format(date, "yyyy-MM-dd") : null;
 
-      const { error } = await supabase
-        .from("events")
-        .insert([
-          {
-            title: title || null,
-            date: formattedDate,
-            time: formattedTime || null,
-            link_primary: linkPrimary || null,
-            linkone_text: linkOneText || null,
-            link_secondary: linkSecondary || null,
-            linktwo_text: linkTwoText || null,
-            location: location || null,
-            img_url: imgUrl || null,
-            description: description || null,
-            speaker: speaker || null,
-            is_competition: iscomepition || false,
-          },
-        ])
-        .select();
-
-      if (error) {
-        throw error;
-      } else {
+      await createEventMutation.mutateAsync({
+        title: title || null,
+        date: formattedDate,
+        time: formattedTime || null,
+        link_primary: linkPrimary || null,
+        linkone_text: linkOneText || null,
+        link_secondary: linkSecondary || null,
+        linktwo_text: linkTwoText || null,
+        location: location || null,
+        img_url: imgUrl || null,
+        description: description || null,
+        speaker: speaker || null,
+        is_competition: iscomepition || false,
+      });
         if (sendEmail) {
           try {
             const { data: members, error: memberError } = await supabase
@@ -255,7 +248,6 @@ export function NewEvent() {
             </div>
           </div>,
         );
-      }
     } catch {
       toast(
         <div>
@@ -728,7 +720,7 @@ export function NewEvent() {
           </AlertDialog>
         </div>
       ) : (
-        <Navigate to="/nopermission" replace />
+        navigateto("/nopermission")
       )}
     </>
   );

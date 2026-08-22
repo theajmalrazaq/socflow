@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useOutletContext, useNavigate } from "react-router-dom";
 import {
   Edit,
@@ -36,183 +36,77 @@ import {
   DialogDescription,
   DialogClose,
 } from "@/components/ui/dialog";
-import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 import { canManageLeads, hasPermission } from "@/lib/permissions";
+
+import {
+  useLeadsQuery,
+  useCreateLeadMutation,
+  useUpdateLeadMutation,
+  useDeleteLeadMutation,
+} from "@/hooks/queries/useLeads";
 
 export function Leads() {
   const navigate = useNavigate();
   const outlet = useOutletContext();
   const access = outlet?.permissions;
-  const [leads, setLeads] = useState([]);
-  const [setError] = useState(null);
-  const [loading, setLoading] = useState(true);
+
+  const [page, setPage] = useState(0);
+  const leadsPerPage = 10;
+  const [search, setSearch] = useState("");
+
+  const { data: leadsData, isLoading: loading } = useLeadsQuery({
+    page,
+    limit: leadsPerPage,
+  });
+
+  const createLeadMutation = useCreateLeadMutation();
+  const updateLeadMutation = useUpdateLeadMutation();
+  const deleteLeadMutation = useDeleteLeadMutation();
+
+  const leads = leadsData?.leads || [];
+
   const [selectedLead, setSelectedLead] = useState(null);
   const [title, setTitle] = useState("");
   const [leadToDelete, setLeadToDelete] = useState(null);
   const [newLeadTitle, setNewLeadTitle] = useState("");
   const [isCreatingNewLead, setIsCreatingNewLead] = useState(false);
-  const [page, setPage] = useState(0);
-  const [leadsPerPage] = useState(10);
-  const [filteredResponses, setFilteredResponses] = useState([]);
-  const [search, setSearch] = useState("");
 
   // Granular loading states
-  const [updatingLeadId, setUpdatingLeadId] = useState(null);
-  const [deletingId, setDeletingId] = useState(null);
-  const [creatingLead, setCreatingLead] = useState(false);
-
-  useEffect(() => {
-    const fetchLeads = async () => {
-      setLoading(true);
-      const { data, error } = await supabase
-        .from("allLeads")
-        .select("*")
-        .order("id", { ascending: false })
-        .range(page * leadsPerPage, (page + 1) * leadsPerPage - 1);
-
-      if (error) {
-        setError(error);
-        setLoading(false);
-        return;
-      }
-
-      const enriched = await Promise.all(
-        (data || []).map(async (lead) => {
-          try {
-            const { count, error: countError } = await supabase
-              .from("leadsData")
-              .select("*", { count: "exact" })
-              .eq("lead_id", lead.id);
-
-            if (countError) {
-              console.warn("lead members count error", countError);
-            }
-            return { ...lead, memberCount: count || 0 };
-          } catch (e) {
-            console.error("Error enriching lead", e);
-            return { ...lead, memberCount: 0 };
-          }
-        }),
-      );
-
-      setLeads(enriched);
-      setFilteredResponses(enriched);
-      setLoading(false);
-    };
-
-    fetchLeads();
-  }, [page, leadsPerPage, setError]);
+  const updatingLeadId = updateLeadMutation.isPending ? selectedLead?.id : null;
+  const deletingId = deleteLeadMutation.isPending ? leadToDelete?.id : null;
+  const creatingLead = createLeadMutation.isPending;
 
   const handleUpdate = async () => {
-    setUpdatingLeadId(selectedLead.id);
-    const { error } = await supabase
-      .from("allLeads")
-      .update({
+    if (!selectedLead) return;
+    try {
+      await updateLeadMutation.mutateAsync({
+        id: String(selectedLead.id),
         title: title || null,
-      })
-      .eq("id", String(selectedLead.id));
-
-    if (error) {
-      toast(
-        <div>
-          <strong>Failed!!</strong>
-          <div>Lead Update Unsuccessful</div>
-        </div>,
-      );
-    } else {
-      setLeads((prevLeads) =>
-        prevLeads.map((lead) =>
-          lead.id === selectedLead.id
-            ? {
-                ...lead,
-                title: title || null,
-              }
-            : lead,
-        ),
-      );
+      });
       setSelectedLead(null);
-      toast(
-        <div>
-          <strong>Updated!!</strong>
-          <div>
-            Lead Updated Successfully!!
-            <a href="https://mlsacfd.vercel.app/team" target="_blank" rel="noreferrer">
-              <button
-                alt="view"
-                className="underline text-sm ml-2 leading-none hover:opacity-80 transition-opacity"
-              >
-                View
-              </button>
-            </a>
-          </div>
-        </div>,
-      );
-    }
-    setUpdatingLeadId(null);
+    } catch {}
   };
 
   const deleteLead = async () => {
-    setDeletingId(leadToDelete.id);
-    const { error } = await supabase.from("allLeads").delete().eq("id", String(leadToDelete.id));
-    if (error) {
-      toast(
-        <div>
-          <strong>Failed!!</strong>
-          <div>Unable to delete lead</div>
-        </div>,
-      );
-    } else {
-      setLeads((prevLeads) => prevLeads.filter((lead) => lead.id !== leadToDelete.id));
-      setFilteredResponses((prev) => prev.filter((lead) => lead.id !== leadToDelete.id));
+    if (!leadToDelete) return;
+    try {
+      await deleteLeadMutation.mutateAsync(String(leadToDelete.id));
       setLeadToDelete(null);
-      toast(
-        <div>
-          <strong>Deleted!!</strong>
-          <div>Lead Deleted Successfully!!</div>
-        </div>,
-      );
-    }
-    setDeletingId(null);
+    } catch {}
   };
 
   const handleCreateNewLead = async () => {
     if (!newLeadTitle.trim()) {
-      toast(
-        <div>
-          <strong>Error</strong>
-          <div>Lead title cannot be empty.</div>
-        </div>,
-      );
+      toast.error("Lead title cannot be empty.");
       return;
     }
 
-    setCreatingLead(true);
-    const { data, error } = await supabase
-      .from("allLeads")
-      .insert([{ title: newLeadTitle }])
-      .select("*");
-
-    if (error) {
-      toast(
-        <div>
-          <strong>Failed!!</strong>
-          <div>Failed to create new lead.</div>
-        </div>,
-      );
-    } else {
-      setLeads((prevLeads) => [{ ...data[0], memberCount: 0 }, ...prevLeads]);
-      setFilteredResponses((prev) => [{ ...data[0], memberCount: 0 }, ...prev]);
+    try {
+      await createLeadMutation.mutateAsync(newLeadTitle.trim());
       setNewLeadTitle("");
-      toast(
-        <div>
-          <strong>Success!!</strong>
-          <div>New lead created successfully.</div>
-        </div>,
-      );
       setIsCreatingNewLead(false);
-    }
-    setCreatingLead(false);
+    } catch {}
   };
 
   const handlePreviousPage = () => {
@@ -223,14 +117,10 @@ export function Leads() {
     if (leads.length === leadsPerPage) setPage(page + 1);
   };
 
-  useEffect(() => {
-    if (!search) {
-      setFilteredResponses(leads);
-      return;
-    }
-    const q = search.toLowerCase();
-    setFilteredResponses(leads.filter((lead) => (lead.title || "").toLowerCase().includes(q)));
-  }, [search, leads]);
+  const filteredResponses = useMemo(() => {
+    if (!search) return leads;
+    return leads.filter((lead) => (lead.title || "").toLowerCase().includes(search.toLowerCase()));
+  }, [leads, search]);
 
   return (
     <>

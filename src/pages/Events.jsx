@@ -75,13 +75,29 @@ import {
 import { toast } from "sonner";
 import { motion } from "framer-motion";
 
+import { useEventsQuery, useUpdateEventMutation, useDeleteEventMutation } from "@/hooks/queries/useEvents";
+
 export function Events() {
   const navigate = useNavigate();
   const outlet = useOutletContext();
   const access = outlet?.permissions;
-  const [events, setEvents] = useState([]);
-  const [setError] = useState(null);
-  const [loading, setLoading] = useState(true);
+
+  const [page, setPage] = useState(0);
+  const eventsPerPage = 10;
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [search, setSearch] = useState("");
+  const locationRoute = useLocation();
+
+  const { data: eventsData, isLoading: loading } = useEventsQuery({
+    page,
+    limit: eventsPerPage,
+  });
+  const updateEventMutation = useUpdateEventMutation();
+  const deleteEventMutation = useDeleteEventMutation();
+
+  const events = eventsData?.events || [];
+
+  // Edit Event State
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [title, setTitle] = useState("");
   const [date, setDate] = useState("");
@@ -95,12 +111,6 @@ export function Events() {
   const [description, setDescription] = useState("");
   const [isCompetition, setIsCompetition] = useState(false);
   const [eventToDelete, setEventToDelete] = useState(null);
-  const [page, setPage] = useState(0);
-  const [eventsPerPage] = useState(10);
-  const [filteredResponses, setFilteredResponses] = useState([]);
-  const [statusFilter, setStatusFilter] = useState("all");
-  const [search, setSearch] = useState("");
-  const locationRoute = useLocation();
 
   // Create Event Popup State
   const [isCreateOpen, setIsCreateOpen] = useState(false);
@@ -133,8 +143,8 @@ export function Events() {
   }, [locationRoute.search]);
 
   // Granular loading states
-  const [updatingEventId, setUpdatingEventId] = useState(null);
-  const [deletingId, setDeletingId] = useState(null);
+  const updatingEventId = updateEventMutation.isPending ? selectedEvent?.id : null;
+  const deletingId = deleteEventMutation.isPending ? eventToDelete?.id : null;
 
   // Time picker states
   const [hour, setHour] = useState("");
@@ -172,71 +182,13 @@ export function Events() {
     return { hour: hour12, minute: m, period };
   };
 
-  useEffect(() => {
-    const fetchEvents = async () => {
-      setLoading(true);
-      const { data, error } = await supabase
-        .from("events")
-        .select("*")
-        .order("id", { ascending: false })
-        .range(page * eventsPerPage, (page + 1) * eventsPerPage - 1);
-
-      if (error) {
-        setError(error);
-
-        setLoading(false);
-        return;
-      }
-
-      const enriched = await Promise.all(
-        (data || []).map(async (event) => {
-          try {
-            if (event.is_competition) {
-              const { count, error: compCountError } = await supabase
-                .from("competitionsResponses")
-                .select("*", { count: "exact" })
-                .eq("event_id", event.id);
-
-              if (compCountError) {
-                console.warn("competition count error", compCountError);
-              }
-              return { ...event, responseCount: count || 0 };
-            } else {
-              const { count, error: countError } = await supabase
-                .from("eventsResponses")
-                .select("*", { count: "exact" })
-                .eq("event_id", event.id);
-
-              if (countError) {
-                console.warn("event responses count error", countError);
-              }
-              return { ...event, responseCount: count || 0 };
-            }
-          } catch (e) {
-            console.error("Error enriching event", e);
-            return { ...event, responseCount: 0 };
-          }
-        }),
-      );
-
-      setEvents(enriched);
-      setFilteredResponses(enriched);
-      setLoading(false);
-    };
-
-    fetchEvents();
-  }, [page, eventsPerPage, setError]);
-
   const handleUpdate = async () => {
-    setUpdatingEventId(selectedEvent.id);
-
-    // Format time and date
     const formattedTime = formatTime(hour, minute, period);
     const formattedDate = date ? format(date, "yyyy-MM-dd") : null;
 
-    const { error } = await supabase
-      .from("events")
-      .update({
+    try {
+      await updateEventMutation.mutateAsync({
+        id: String(selectedEvent.id),
         title: title || null,
         date: formattedDate,
         time: formattedTime || null,
@@ -249,81 +201,17 @@ export function Events() {
         img_url: imgUrl || null,
         description: description || null,
         is_competition: isCompetition || false,
-      })
-      .eq("id", String(selectedEvent.id));
-
-    if (error) {
-      toast(
-        <div>
-          <strong>Failed!!</strong>
-          <div>Event Update Unsuccessful</div>
-        </div>,
-      );
-    } else {
-      setEvents((prevEvents) =>
-        prevEvents.map((event) =>
-          event.id === selectedEvent.id
-            ? {
-                ...event,
-                title: title || null,
-                date: formattedDate,
-                time: formattedTime || null,
-                speaker: speaker || null,
-                link_primary: linkPrimary || null,
-                linkone_text: linkOneText || null,
-                link_secondary: linkSecondary || null,
-                linktwo_text: linkTwoText || null,
-                location: location || null,
-                img_url: imgUrl || null,
-                description: description || null,
-                is_competition: isCompetition || false,
-              }
-            : event,
-        ),
-      );
+      });
       setSelectedEvent(null);
-      toast(
-        <div>
-          <strong>Updated!!</strong>
-          <div>
-            Event Updated Successfully!!
-            <a href="https://mlsacfd.com/events.html" target="_blank" rel="noreferrer">
-              <button
-                alt="view"
-                className="underline text-sm ml-2 leading-none hover:opacity-80 transition-opacity"
-              >
-                View
-              </button>
-            </a>
-          </div>
-        </div>,
-      );
-    }
-    setUpdatingEventId(null);
+    } catch {}
   };
 
   const deleteEvent = async () => {
-    setDeletingId(eventToDelete.id);
-    const { error } = await supabase.from("events").delete().eq("id", String(eventToDelete.id));
-    if (error) {
-      toast(
-        <div>
-          <strong>Failed!!</strong>
-          <div>Unable to delete event</div>
-        </div>,
-      );
-    } else {
-      setEvents((prevEvents) => prevEvents.filter((event) => event.id !== eventToDelete.id));
-      setFilteredResponses((prev) => prev.filter((event) => event.id !== eventToDelete.id));
+    if (!eventToDelete) return;
+    try {
+      await deleteEventMutation.mutateAsync(String(eventToDelete.id));
       setEventToDelete(null);
-      toast(
-        <div>
-          <strong>Deleted!!</strong>
-          <div>Event Deleted Successfully!!</div>
-        </div>,
-      );
-    }
-    setDeletingId(null);
+    } catch {}
   };
 
   const applyCreateFormat = (command) => {
@@ -528,20 +416,15 @@ export function Events() {
     if (events.length === eventsPerPage) setPage(page + 1);
   };
 
-  useEffect(() => {
+  const filteredResponses = useMemo(() => {
     const q = (search || "").toLowerCase();
-
-    const applyStatusFilter = (items) => {
-      if (statusFilter === "competition") {
-        return items.filter((e) => e.is_competition);
-      }
-      if (statusFilter === "non_competition") {
-        return items.filter((e) => !e.is_competition);
-      }
-      return items;
-    };
-
     let result = events;
+
+    if (statusFilter === "competition") {
+      result = result.filter((e) => e.is_competition);
+    } else if (statusFilter === "non_competition") {
+      result = result.filter((e) => !e.is_competition);
+    }
 
     if (q) {
       result = result.filter(
@@ -552,9 +435,7 @@ export function Events() {
       );
     }
 
-    result = applyStatusFilter(result);
-
-    setFilteredResponses(result);
+    return result;
   }, [search, events, statusFilter]);
 
   return (
