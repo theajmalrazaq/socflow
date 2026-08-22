@@ -42,8 +42,6 @@ import {
   Check,
   Eye,
   EyeOff,
-  KeyRound,
-  ShieldCheck,
   ExternalLink,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -54,7 +52,6 @@ import {
   getEmailConfig,
   saveEmailConfig,
   resetEmailConfig,
-  getSmtpConfig,
   saveSmtpConfig,
   fetchSmtpConfigFromDB,
 } from "@/lib/emailConfig";
