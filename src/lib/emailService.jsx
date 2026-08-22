@@ -105,7 +105,7 @@ export async function sendEmail({
   let data = {};
   try {
     data = responseText ? JSON.parse(responseText) : {};
-  } catch (_) {
+  } catch {
     throw new Error(
       `Delivery service responded with status ${response.status}: ${responseText.slice(0, 120) || "Empty response"}`,
     );

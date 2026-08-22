@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { useOutletContext, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import {
-  UserPlus,
   Search,
   Shield,
   Trash2,
@@ -544,7 +543,7 @@ export function Users() {
         });
         authData = adminRes.data;
         authError = adminRes.error;
-      } catch (_e) {
+      } catch {
         // Admin API not available on client key, fallback to signUp
       }
 

@@ -316,7 +316,7 @@ export function Home() {
         try {
           const dStr = new Date(ts).toISOString().split("T")[0];
           map[dStr] = (map[dStr] || 0) + 1;
-        } catch (_e) {}
+        } catch {}
       }
     };
 

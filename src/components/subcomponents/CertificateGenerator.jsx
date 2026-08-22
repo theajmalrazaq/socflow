@@ -16,9 +16,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-import { Award, Download, Loader, ChevronDown, Mail } from "lucide-react";
+import { Award, Download, Loader, Mail } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 import { toPng } from "html-to-image";
@@ -111,7 +110,7 @@ export function CertificateGenerator({
 
   const processUser = async (user, member, isWinner, position) => {
     let code;
-    const { data: existingCert, error: fetchError } = await supabase
+    const { data: existingCert } = await supabase
       .from("certification")
       .select("code")
       .eq("event_id", eventId)

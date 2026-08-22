@@ -46,7 +46,6 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
-import { canManageEvents } from "@/lib/permissions";
 
 export function NewEvent() {
   const navigateto = useNavigate();
@@ -129,7 +128,7 @@ export function NewEvent() {
       try {
         el.focus();
         el.setSelectionRange(cursor, cursor);
-      } catch (e) {}
+      } catch {}
     }, 0);
   };
 
@@ -248,8 +247,8 @@ export function NewEvent() {
             <div>
               Your event has been scheduled and published
               <button
-                onClick={() => window.open("https://mlsacfd.com/events.html", "_blank")}
-                className="underline text-sm ml-2 leading-none hover:opacity-80 transition-opacity"
+                onClick={() => navigateto("/events")}
+                className="underline text-sm ml-2 leading-none hover:opacity-80 transition-opacity cursor-pointer"
               >
                 View
               </button>
@@ -257,11 +256,11 @@ export function NewEvent() {
           </div>,
         );
       }
-    } catch (err) {
+    } catch {
       toast(
         <div>
           <strong>Failed!!</strong>
-          <div>Event failed to post. Contact developer.</div>
+          <div>Event failed to post. Please try again.</div>
         </div>,
       );
     }

@@ -20,7 +20,6 @@ import {
   Phone,
   UserCheck,
   CheckCircle2,
-  ListFilter,
   Loader,
 } from "lucide-react";
 import { Certificate } from "@/components/subcomponents/Certificate";
@@ -84,11 +83,8 @@ export function EventDetails() {
   const [filteredResponses, setFilteredResponses] = useState([]);
   const [error, setError] = useState(false);
   const [responseToDelete, setResponseToDelete] = useState(null);
-  const [responseToUpdate, setResponseToUpdate] = useState(null);
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
-  const [confirmationStatus, setConfirmationStatus] = useState(null);
-  const [confirmationattendance, setConfirmationattendance] = useState(null);
   const [page, setPage] = useState(0);
   const [responsesPerPage] = useState(10);
   const [totalResponses, setTotalResponses] = useState(0);
@@ -119,11 +115,7 @@ export function EventDetails() {
 
       if (eventName) return;
 
-      const { data, error } = await supabase
-        .from("events")
-        .select("title")
-        .eq("id", event_id)
-        .single();
+      const { data } = await supabase.from("events").select("title").eq("id", event_id).single();
 
       if (data) {
         setEventName(data.title || data.name || "Event");
@@ -135,7 +127,7 @@ export function EventDetails() {
 
   const eventtype = is_competition ? "competitionsResponses" : "eventsResponses";
 
-  const attendanceColumn = useCallback((isComp = is_competition) => "attendance", [is_competition]);
+  const attendanceColumn = useCallback(() => "attendance", []);
 
   const getAttendance = (response) => {
     if (!response) return null;
@@ -488,15 +480,6 @@ export function EventDetails() {
     if ((page + 1) * responsesPerPage < totalResponses) {
       setPage(page + 1);
     }
-  };
-
-  const getPositionBadge = (position) => {
-    const colors = {
-      1: "bg-gradient-to-r from-yellow-400 to-yellow-600 text-white",
-      2: "bg-gradient-to-r from-gray-300 to-gray-500 text-white",
-      3: "bg-gradient-to-r from-amber-600 to-amber-800 text-white",
-    };
-    return colors[position] || "bg-blue-500 text-white";
   };
 
   const getPositionIcon = (position) => {

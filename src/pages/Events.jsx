@@ -85,7 +85,6 @@ export function Events() {
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [title, setTitle] = useState("");
   const [date, setDate] = useState("");
-  const [time, setTime] = useState("");
   const [linkPrimary, setLinkPrimary] = useState("");
   const [linkSecondary, setLinkSecondary] = useState("");
   const [linkOneText, setLinkOneText] = useState("");
@@ -124,7 +123,6 @@ export function Events() {
   const [createSendEmail, setCreateSendEmail] = useState(false);
   const [createCustomRecipients, setCreateCustomRecipients] = useState("");
   const [createSendingProgress, setCreateSendingProgress] = useState({ current: 0, total: 0 });
-  const [isConfirmCreateOpen, setIsConfirmCreateOpen] = useState(false);
   const createDescriptionRef = useRef(null);
 
   useEffect(() => {
@@ -377,7 +375,7 @@ export function Events() {
       try {
         el.focus();
         el.setSelectionRange(cursor, cursor);
-      } catch (e) {}
+      } catch {}
     }, 0);
   };
 
@@ -492,7 +490,7 @@ export function Events() {
           <div>Your new event has been created and published.</div>
         </div>,
       );
-    } catch (err) {
+    } catch {
       toast(
         <div>
           <strong>Failed!!</strong>

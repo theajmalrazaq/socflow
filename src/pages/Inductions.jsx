@@ -92,7 +92,7 @@ export function Inductions() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [teamFilter, setTeamFilter] = useState("all");
-  const [teamsList, setTeamsList] = useState([]);
+  const [teamsList, _setTeamsList] = useState([]);
   const [exportFilter, setExportFilter] = useState("all");
   const [page, setPage] = useState(0);
   const [responseToView, setResponseToView] = useState(null);
@@ -192,7 +192,7 @@ export function Inductions() {
       setBulkTarget(target);
       const responses = await fetchFilteredResponses(target);
       setBulkTargetCount(Array.isArray(responses) ? responses.length : 0);
-    } catch (err) {
+    } catch {
       setBulkTargetCount(0);
     }
     setIsBulkInterviewDialogOpen(true);

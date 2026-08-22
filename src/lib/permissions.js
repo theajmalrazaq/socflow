@@ -75,9 +75,6 @@ export const DEFAULT_PERMISSIONS = {
   },
 };
 
-/**
- * Pre-defined Role Presets
- */
 export const ROLE_PRESETS = {
   ADMIN: "admin",
   EVENT_MANAGER: "event_manager",
@@ -154,9 +151,6 @@ export const READ_ONLY_PRESET = {
   users: { enabled: false, sub: { createUser: false, editRole: false, deleteUser: false } },
 };
 
-/**
- * Parse permissions object or string
- */
 export function parsePermissions(permInput) {
   if (!permInput) return DEFAULT_PERMISSIONS;
 
@@ -169,9 +163,7 @@ export function parsePermissions(permInput) {
       if (typeof parsed === "object" && parsed !== null) {
         obj = parsed;
       }
-    } catch (_e) {
-      // Not JSON string
-    }
+    } catch {}
   }
 
   if (obj) {
@@ -219,7 +211,6 @@ export function parsePermissions(permInput) {
     };
   }
 
-  // Legacy preset string checks
   const isFullAdmin = permInput === "admin" || permInput === "full" || permInput === "RnVsbA==";
   const isEventManager = permInput === "event_manager" || permInput === "Y29udGVudF9vbmx5";
   const isReadOnly =

@@ -158,7 +158,7 @@ export async function fetchEmailConfigFromDB() {
     if (typeof window !== "undefined") {
       try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(activeDbConfig));
-      } catch (_) {}
+      } catch {}
       window.dispatchEvent(new CustomEvent(CONFIG_EVENT, { detail: activeDbConfig }));
     }
   } catch (err) {
@@ -189,7 +189,7 @@ export function getEmailConfig() {
           ...JSON.parse(raw),
         };
       }
-    } catch (_) {}
+    } catch {}
   }
 
   return activeDbConfig;
@@ -210,7 +210,7 @@ export async function saveEmailConfig(newConfig) {
   if (typeof window !== "undefined") {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(merged));
-    } catch (_) {}
+    } catch {}
     window.dispatchEvent(new CustomEvent(CONFIG_EVENT, { detail: merged }));
   }
 
@@ -241,7 +241,7 @@ export async function resetEmailConfig() {
   if (typeof window !== "undefined") {
     try {
       localStorage.removeItem(STORAGE_KEY);
-    } catch (_) {}
+    } catch {}
     window.dispatchEvent(new CustomEvent(CONFIG_EVENT, { detail: DEFAULT_EMAIL_CONFIG }));
   }
 
