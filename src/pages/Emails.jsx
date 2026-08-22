@@ -1,5 +1,5 @@
 import { useState, useEffect, startTransition } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Navigate } from "react-router-dom";
 import {
   Search,
   File,
@@ -958,23 +958,16 @@ export function Emails() {
                 {}
                 <div className="w-full mt-12 text-center">
                   <div className="flex items-center justify-center text-xs text-muted-foreground">
-                    Made With
-                    <Heart className="mx-1 w-4 fill-orange-600 animate-pulse" />
-                    <a
-                      href="https://theajmalrazaq.github.io"
-                      target="_blank"
-                      className="text-orange-600 font-mono font-bold uppercase hover:underline ml-1"
-                      rel="noreferrer"
-                    >
-                      Ajmal Razaq Bhatti
-                    </a>
+                    Designed & Built with{" "}
+                    <Heart className="w-3.5 h-3.5 mx-1 text-red-500 fill-red-500 inline" /> for
+                    <span className="text-primary font-semibold ml-1">Socflow</span>
                   </div>
                 </div>
               </div>
             )}
           </>
         ) : (
-          navigateto("/nopermission")
+          <Navigate to="/nopermission" replace />
         )
       ) : (
         <div className="min-h-screen flex items-center justify-center">

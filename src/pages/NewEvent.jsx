@@ -1,10 +1,10 @@
-import { useNavigate, useOutletContext } from "react-router-dom";
+import { useNavigate, useOutletContext, Navigate } from "react-router-dom";
 import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 import {
@@ -728,7 +728,7 @@ export function NewEvent() {
           </AlertDialog>
         </div>
       ) : (
-        navigateto("/nopermission")
+        <Navigate to="/nopermission" replace />
       )}
     </>
   );

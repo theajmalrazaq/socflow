@@ -15,7 +15,8 @@
     "lint:fix": "bunx oxlint --fix src/",
     "preview": "vite preview",
     "clean": "bun run format && node ./scripts/clean.js",
-    "email": "email dev"
+    "email": "email dev",
+    "doctor": "npx react-doctor@latest"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",

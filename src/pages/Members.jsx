@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { Navigate, useOutletContext } from "react-router-dom";
 import {
   Search,
   File,
@@ -46,11 +46,9 @@ import Loading from "@/components/layout/Loading";
 import { FormatDate } from "@/components/subcomponents/FormatDate";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
-import { useOutletContext } from "react-router-dom";
 import { canManageMembers } from "@/lib/permissions";
 
 export function Members() {
-  const navigateto = useNavigate();
   const outlet = useOutletContext();
   const access = outlet?.permissions;
   const [filteredResponses, setFilteredResponses] = useState([]);
@@ -891,23 +889,16 @@ export function Members() {
                 {}
                 <div className="w-full mt-12 text-center">
                   <div className="flex items-center justify-center text-xs text-muted-foreground">
-                    Made With
-                    <Heart className="mx-1 w-4 fill-orange-600 animate-pulse" />
-                    <a
-                      href="https://theajmalrazaq.github.io"
-                      target="_blank"
-                      className="text-orange-600 font-mono font-bold uppercase hover:underline ml-1"
-                      rel="noreferrer"
-                    >
-                      Ajmal Razaq Bhatti
-                    </a>
+                    Designed & Built with{" "}
+                    <Heart className="w-3.5 h-3.5 mx-1 text-red-500 fill-red-500 inline" /> for
+                    <span className="text-primary font-semibold ml-1">Socflow</span>
                   </div>
                 </div>
               </div>
             )}
           </>
         ) : (
-          navigateto("/nopermission")
+          <Navigate to="/nopermission" replace />
         )
       ) : (
         <div className="min-h-screen flex items-center justify-center">

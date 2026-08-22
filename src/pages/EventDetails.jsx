@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import { useLocation, useNavigate, useOutletContext } from "react-router-dom";
+import { useLocation, useNavigate, useOutletContext, Navigate } from "react-router-dom";
 import {
   Mail,
   Search,
@@ -23,6 +23,7 @@ import {
   Loader,
 } from "lucide-react";
 import { Certificate } from "@/components/subcomponents/Certificate";
+import { CertificateGenerator } from "@/components/subcomponents/CertificateGenerator";
 import { sendCertificateEmail } from "@/lib/emailService.jsx";
 import Loading from "@/components/layout/Loading";
 import { Button } from "@/components/ui/button";
@@ -1454,7 +1455,7 @@ export function EventDetails() {
           )}
         </div>
       ) : (
-        navigator("/nopermission")
+        <Navigate to="/nopermission" replace />
       )}
       <div className="fixed left-[-9999px] top-[-9999px]">
         {currentCertificate && <Certificate ref={certificateRef} {...currentCertificate} />}
