@@ -113,46 +113,70 @@ let activeDbConfig = { ...DEFAULT_EMAIL_CONFIG };
 let isInitialFetched = false;
 
 /**
+ * Build config directly from society record in database
+ */
+export function buildSocietyEmailConfig(soc = null, customSettings = {}) {
+  const name = soc?.name || "";
+  const email = soc?.email || "";
+  const year = new Date().getFullYear();
+
+  return {
+    ...DEFAULT_EMAIL_CONFIG,
+    brandName: name,
+    senderName: name ? `${name} Team` : "Society Team",
+    logoUrl: soc?.logo_url || "",
+    bannerUrl: soc?.cover_url || "",
+    primaryColor: soc?.branding_color || "#2A43F8",
+    instagramUrl: soc?.instagram_url || "",
+    linkedinUrl: soc?.linkedin_url || "",
+    websiteUrl: soc?.website_url || "",
+    supportEmail: email,
+    twitterUrl: customSettings.twitterUrl || "",
+    footerCopyright: name
+      ? `© ${year} ${name}. All rights reserved.`
+      : `© ${year} Society. All rights reserved.`,
+    footerDisclaimer: name
+      ? (email
+          ? `This is an automated email sent by the ${name} management system. If you find any mistake, please report at ${email}.`
+          : `This is an automated email sent by the ${name} management system.`)
+      : "",
+    ...customSettings,
+    // Always preserve real society core details from DB
+    ...(name ? { brandName: name, senderName: `${name} Team` } : {}),
+    ...(email ? { supportEmail: email } : {}),
+    ...(soc?.logo_url ? { logoUrl: soc.logo_url } : {}),
+    ...(soc?.cover_url ? { bannerUrl: soc.cover_url } : {}),
+    ...(soc?.branding_color ? { primaryColor: soc.branding_color } : {}),
+    ...(soc?.instagram_url ? { instagramUrl: soc.instagram_url } : {}),
+    ...(soc?.linkedin_url ? { linkedinUrl: soc.linkedin_url } : {}),
+    ...(soc?.website_url ? { websiteUrl: soc.website_url } : {}),
+  };
+}
+
+/**
  * Fetch latest configuration directly from Supabase Database
  */
 export async function fetchEmailConfigFromDB() {
   try {
-    // 1. Fetch from app_settings table
+    // 1. Fetch society record for active branding & social info
+    const { data: socData } = await supabase
+      .from("societies")
+      .select("*")
+      .order("created_at", { ascending: false })
+      .limit(1);
+
+    const soc = socData && socData.length > 0 ? socData[0] : null;
+
+    // 2. Fetch from app_settings table
     const { data: settingsData, error: settingsError } = await supabase
       .from("app_settings")
       .select("value")
       .eq("key", STORAGE_KEY)
       .maybeSingle();
 
-    if (!settingsError && settingsData?.value) {
-      activeDbConfig = {
-        ...DEFAULT_EMAIL_CONFIG,
-        ...settingsData.value,
-      };
-    } else {
-      // 2. Fallback check from societies table for primary branding
-      const { data: socData } = await supabase
-        .from("societies")
-        .select("*")
-        .order("created_at", { ascending: false })
-        .limit(1);
+    const savedConfig = (!settingsError && settingsData?.value) ? settingsData.value : {};
 
-      if (socData && socData.length > 0) {
-        const soc = socData[0];
-        activeDbConfig = {
-          ...DEFAULT_EMAIL_CONFIG,
-          brandName: soc.name || "",
-          senderName: soc.name ? `${soc.name} Team` : "",
-          logoUrl: soc.logo_url || "",
-          bannerUrl: soc.cover_url || "",
-          primaryColor: soc.branding_color || "#2A43F8",
-          instagramUrl: soc.instagram_url || "",
-          linkedinUrl: soc.linkedin_url || "",
-          websiteUrl: soc.website_url || "",
-          supportEmail: soc.email || "",
-        };
-      }
-    }
+    activeDbConfig = buildSocietyEmailConfig(soc, savedConfig);
 
     isInitialFetched = true;
     if (typeof window !== "undefined") {
@@ -179,7 +203,6 @@ if (typeof window !== "undefined") {
 export function getEmailConfig() {
   if (isInitialFetched) return activeDbConfig;
 
-  // If not yet fetched, try reading localStorage cache while async fetch completes
   if (typeof window !== "undefined") {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
@@ -242,13 +265,14 @@ export async function resetEmailConfig() {
     try {
       localStorage.removeItem(STORAGE_KEY);
     } catch {}
-    window.dispatchEvent(new CustomEvent(CONFIG_EVENT, { detail: DEFAULT_EMAIL_CONFIG }));
+    window.dispatchEvent(new CustomEvent(CONFIG_EVENT, { detail: activeDbConfig }));
   }
 
   // Delete from Supabase DB
   await supabase.from("app_settings").delete().eq("key", STORAGE_KEY);
 
-  return { ...DEFAULT_EMAIL_CONFIG };
+  // Reload from society record
+  return await fetchEmailConfigFromDB();
 }
 
 /**

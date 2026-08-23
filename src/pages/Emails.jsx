@@ -56,6 +56,7 @@ import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 import { FormatDate } from "@/components/subcomponents/FormatDate";
 import { sendContactResponseEmail } from "@/lib/emailService.jsx";
+import { getEmailConfig } from "@/lib/emailConfig";
 import { useOutletContext } from "react-router-dom";
 import { canManageEmails, hasPermission } from "@/lib/permissions";
 
@@ -64,6 +65,7 @@ import {
   useUpdateEmailStatusMutation,
   useDeleteEmailMutation,
 } from "@/hooks/queries/useEmails";
+import { useEmailStore } from "@/stores/useEmailStore";
 
 export function Emails() {
   const navigateto = useNavigate();
@@ -76,15 +78,27 @@ export function Emails() {
     }
   }, [access, navigateto]);
 
-  const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
-  const [exportFilter, setExportFilter] = useState("all");
-  const [page, setPage] = useState(0);
-  const [responseToView, setResponseToView] = useState(null);
-  const [responseToReply, setResponseToReply] = useState(null);
-  const [replyMessage, setReplyMessage] = useState("");
+  const {
+    searchTerm,
+    setSearchTerm,
+    statusFilter,
+    setStatusFilter,
+    exportFilter,
+    setExportFilter,
+    page,
+    setPage,
+    responseToView,
+    setResponseToView,
+    responseToReply,
+    setResponseToReply,
+    replyMessage,
+    setReplyMessage,
+    responseToDelete,
+    setResponseToDelete,
+    resetReplyModal,
+  } = useEmailStore();
+
   const [sendingReply, setSendingReply] = useState(false);
-  const [responseToDelete, setResponseToDelete] = useState(null);
   const responsesPerPage = 10;
 
   const useDebounce = (value, delay) => {
@@ -228,7 +242,11 @@ export function Emails() {
         originalSubject: responseToReply.Subject,
         originalMessage: responseToReply.Message,
         responseMessage: replyMessage,
-        responderName: "MLSA CFD Team",
+        responderName:
+          getEmailConfig().senderName ||
+          (getEmailConfig().brandName
+            ? `${getEmailConfig().brandName} Team`
+            : "Support Team"),
       });
 
       toast.success("Reply sent successfully!");
@@ -752,8 +770,7 @@ export function Emails() {
                   open={Boolean(responseToReply)}
                   onOpenChange={(open) => {
                     if (!open) {
-                      setResponseToReply(null);
-                      setReplyMessage("");
+                      resetReplyModal();
                     }
                   }}
                 >
@@ -795,8 +812,7 @@ export function Emails() {
                         <Button
                           variant="outline"
                           onClick={() => {
-                            setResponseToReply(null);
-                            setReplyMessage("");
+                            resetReplyModal();
                           }}
                           disabled={sendingReply}
                         >

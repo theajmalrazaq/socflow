@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { useOutletContext, useNavigate } from "react-router-dom";
 import {
   Edit,
@@ -45,15 +44,31 @@ import {
   useUpdateLeadMutation,
   useDeleteLeadMutation,
 } from "@/hooks/queries/useLeads";
+import { useLeadStore } from "@/stores/useLeadStore";
 
 export function Leads() {
   const navigate = useNavigate();
   const outlet = useOutletContext();
   const access = outlet?.permissions;
 
-  const [page, setPage] = useState(0);
+  const {
+    listPage: page,
+    setListPage: setPage,
+    listSearch: search,
+    setListSearch: setSearch,
+    selectedLead,
+    setSelectedLead,
+    editLeadTitle: title,
+    setEditLeadTitle: setTitle,
+    leadCategoryToDelete: leadToDelete,
+    setLeadCategoryToDelete: setLeadToDelete,
+    newLeadCategoryTitle: newLeadTitle,
+    setNewLeadCategoryTitle: setNewLeadTitle,
+    isCreatingNewLead,
+    setIsCreatingNewLead,
+  } = useLeadStore();
+
   const leadsPerPage = 10;
-  const [search, setSearch] = useState("");
 
   const { data: leadsData, isLoading: loading } = useLeadsQuery({
     page,
@@ -65,12 +80,6 @@ export function Leads() {
   const deleteLeadMutation = useDeleteLeadMutation();
 
   const leads = leadsData?.leads || [];
-
-  const [selectedLead, setSelectedLead] = useState(null);
-  const [title, setTitle] = useState("");
-  const [leadToDelete, setLeadToDelete] = useState(null);
-  const [newLeadTitle, setNewLeadTitle] = useState("");
-  const [isCreatingNewLead, setIsCreatingNewLead] = useState(false);
 
   // Granular loading states
   const updatingLeadId = updateLeadMutation.isPending ? selectedLead?.id : null;

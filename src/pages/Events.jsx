@@ -75,17 +75,38 @@ import {
 import { toast } from "sonner";
 import { motion } from "framer-motion";
 
-import { useEventsQuery, useUpdateEventMutation, useDeleteEventMutation } from "@/hooks/queries/useEvents";
+import {
+  useEventsQuery,
+  useUpdateEventMutation,
+  useDeleteEventMutation,
+} from "@/hooks/queries/useEvents";
+import { useEventsPageStore } from "@/stores/useEventsPageStore";
 
 export function Events() {
   const navigate = useNavigate();
   const outlet = useOutletContext();
   const access = outlet?.permissions;
 
-  const [page, setPage] = useState(0);
+  const {
+    page,
+    setPage,
+    statusFilter,
+    setStatusFilter,
+    search,
+    setSearch,
+    selectedEvent,
+    setSelectedEvent,
+    eventToDelete,
+    setEventToDelete,
+    isCreateOpen,
+    setIsCreateOpen,
+    createStep,
+    setCreateStep,
+    createLoading,
+    setCreateLoading,
+  } = useEventsPageStore();
+
   const eventsPerPage = 10;
-  const [statusFilter, setStatusFilter] = useState("all");
-  const [search, setSearch] = useState("");
   const locationRoute = useLocation();
 
   const { data: eventsData, isLoading: loading } = useEventsQuery({
@@ -98,7 +119,6 @@ export function Events() {
   const events = eventsData?.events || [];
 
   // Edit Event State
-  const [selectedEvent, setSelectedEvent] = useState(null);
   const [title, setTitle] = useState("");
   const [date, setDate] = useState("");
   const [linkPrimary, setLinkPrimary] = useState("");
@@ -110,11 +130,8 @@ export function Events() {
   const [imgUrl, setImgUrl] = useState("");
   const [description, setDescription] = useState("");
   const [isCompetition, setIsCompetition] = useState(false);
-  const [eventToDelete, setEventToDelete] = useState(null);
 
   // Create Event Popup State
-  const [isCreateOpen, setIsCreateOpen] = useState(false);
-  const [createStep, setCreateStep] = useState(1);
   const [createTitle, setCreateTitle] = useState("");
   const [createDate, setCreateDate] = useState(undefined);
   const [createHour, setCreateHour] = useState("");
@@ -129,7 +146,6 @@ export function Events() {
   const [createImgUrl, setCreateImgUrl] = useState("");
   const [createDescription, setCreateDescription] = useState("");
   const [createIsCompetition, setCreateIsCompetition] = useState(false);
-  const [createLoading, setCreateLoading] = useState(false);
   const [createSendEmail, setCreateSendEmail] = useState(false);
   const [createCustomRecipients, setCreateCustomRecipients] = useState("");
   const [createSendingProgress, setCreateSendingProgress] = useState({ current: 0, total: 0 });
@@ -140,7 +156,7 @@ export function Events() {
     if (params.get("new") === "true") {
       setIsCreateOpen(true);
     }
-  }, [locationRoute.search]);
+  }, [locationRoute.search, setIsCreateOpen]);
 
   // Granular loading states
   const updatingEventId = updateEventMutation.isPending ? selectedEvent?.id : null;

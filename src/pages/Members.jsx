@@ -53,6 +53,7 @@ import {
   useUpdateMemberStatusMutation,
   useDeleteMemberMutation,
 } from "@/hooks/queries/useMembers";
+import { useMemberStore } from "@/stores/useMemberStore";
 
 export function Members() {
   const navigateto = useNavigate();
@@ -65,13 +66,23 @@ export function Members() {
     }
   }, [access, navigateto]);
 
-  const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
-  const [teamFilter, setTeamFilter] = useState("all");
-  const [page, setPage] = useState(0);
-  const [exportFilter, setExportFilter] = useState("all");
-  const [responseToView, setResponseToView] = useState(null);
-  const [responseToDelete, setResponseToDelete] = useState(null);
+  const {
+    searchTerm,
+    setSearchTerm,
+    statusFilter,
+    setStatusFilter,
+    teamFilter,
+    setTeamFilter,
+    page,
+    setPage,
+    exportFilter,
+    setExportFilter,
+    responseToView,
+    setResponseToView,
+    responseToDelete,
+    setResponseToDelete,
+  } = useMemberStore();
+
   const responsesPerPage = 10;
 
   const useDebounce = (value, delay) => {

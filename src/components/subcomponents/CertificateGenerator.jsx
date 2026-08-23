@@ -25,6 +25,8 @@ import { Certificate } from "./Certificate";
 import { sendCertificateEmail } from "@/lib/emailService.jsx";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
+import { getEmailConfig } from "@/lib/emailConfig";
+
 export function CertificateGenerator({
   eventId,
   eventName,
@@ -47,7 +49,9 @@ export function CertificateGenerator({
     for (let i = 0; i < 8; i++) {
       result += chars.charAt(Math.floor(Math.random() * chars.length));
     }
-    return `MLSACFD-${result}`;
+    const prefix =
+      getEmailConfig().brandName?.replace(/[^a-zA-Z0-9]/g, "").slice(0, 6).toUpperCase() || "CERT";
+    return `${prefix}-${result}`;
   };
 
   const getTargetUsers = () => {

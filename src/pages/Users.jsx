@@ -59,6 +59,12 @@ import {
   canManageUsers,
   hasPermission,
 } from "@/lib/permissions";
+import {
+  useUsersQuery,
+  useCreateUserMutation,
+  useUpdateUserMutation,
+  useDeleteUserMutation,
+} from "@/hooks/queries/useUsers";
 import { toast } from "sonner";
 
 // Page metadata & readable titles for List & Sublist toggles
@@ -317,49 +323,45 @@ function PermissionForm({
   );
 }
 
-import {
-  useUsersQuery,
-  useCreateUserMutation,
-  useUpdateUserMutation,
-  useDeleteUserMutation,
-} from "@/hooks/queries/useUsers";
+import { useUserStore } from "@/stores/useUserStore";
 
 export function Users() {
   const navigate = useNavigate();
   const outlet = useOutletContext();
   const access = outlet?.permissions;
 
-  const [search, setSearch] = useState("");
-  const [roleFilter, setRoleFilter] = useState("all");
+  const {
+    search,
+    setSearch,
+    roleFilter,
+    setRoleFilter,
+    isCreateOpen,
+    setIsCreateOpen,
+    createStep,
+    setCreateStep,
+    newUser,
+    setNewUserField,
+    permissionMatrix,
+    setPermissionMatrix,
+    editingUser,
+    setEditingUser,
+    editPermissions,
+    setEditPermissions,
+    deletingUser,
+    setDeletingUser,
+    resetCreateModal,
+  } = useUserStore();
 
   const { data: usersList = [], isLoading: loading } = useUsersQuery();
   const createUserMutation = useCreateUserMutation();
   const updateUserMutation = useUpdateUserMutation();
   const deleteUserMutation = useDeleteUserMutation();
 
-  // Create User State
-  const [isCreateOpen, setIsCreateOpen] = useState(false);
-  const [createStep, setCreateStep] = useState(1);
-  const [newUser, setNewUser] = useState({
-    name: "",
-    email: "",
-    password: "",
-    role: "custom",
-  });
-  const [permissionMatrix, setPermissionMatrix] = useState(DEFAULT_PERMISSIONS);
-
   // Helper to open create modal and reset step
   const handleOpenCreateModal = () => {
-    setCreateStep(1);
+    resetCreateModal();
     setIsCreateOpen(true);
   };
-
-  // Edit User State
-  const [editingUser, setEditingUser] = useState(null);
-  const [editPermissions, setEditPermissions] = useState(DEFAULT_PERMISSIONS);
-
-  // Delete User State
-  const [deletingUser, setDeletingUser] = useState(null);
 
   const creating = createUserMutation.isPending;
   const updating = updateUserMutation.isPending;
@@ -712,7 +714,7 @@ export function Users() {
                       id="name"
                       placeholder="e.g. Sarah Ahmed"
                       value={newUser.name}
-                      onChange={(e) => setNewUser({ ...newUser, name: e.target.value })}
+                      onChange={(e) => setNewUserField("name", e.target.value)}
                       className="pl-10 h-11 bg-background/60 backdrop-blur-xl border-border/50"
                       required
                     />
@@ -728,7 +730,7 @@ export function Users() {
                       type="email"
                       placeholder="sarah@example.com"
                       value={newUser.email}
-                      onChange={(e) => setNewUser({ ...newUser, email: e.target.value })}
+                      onChange={(e) => setNewUserField("email", e.target.value)}
                       className="pl-10 h-11 bg-background/60 backdrop-blur-xl border-border/50"
                       required
                     />
@@ -743,7 +745,7 @@ export function Users() {
                       id="role"
                       placeholder="e.g. President, Media Lead, Event Coordinator"
                       value={newUser.role}
-                      onChange={(e) => setNewUser({ ...newUser, role: e.target.value })}
+                      onChange={(e) => setNewUserField("role", e.target.value)}
                       className="pl-10 h-11 bg-background/60 backdrop-blur-xl border-border/50"
                     />
                   </div>
@@ -758,7 +760,7 @@ export function Users() {
                       type="password"
                       placeholder="Minimum 6 characters"
                       value={newUser.password}
-                      onChange={(e) => setNewUser({ ...newUser, password: e.target.value })}
+                      onChange={(e) => setNewUserField("password", e.target.value)}
                       className="pl-10 h-11 bg-background/60 backdrop-blur-xl border-border/50"
                       required
                     />
@@ -846,7 +848,7 @@ export function Users() {
                     id="edit-role"
                     placeholder="e.g. President, Tech Lead, Event Organizer"
                     value={editingUser.role || ""}
-                    onChange={(e) => setEditingUser({ ...editingUser, role: e.target.value })}
+                    onChange={(e) => setEditingUserField("role", e.target.value)}
                     className="pl-10 h-11 bg-background/60 backdrop-blur-xl border-border/50"
                   />
                 </div>

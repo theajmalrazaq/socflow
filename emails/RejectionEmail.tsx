@@ -190,11 +190,12 @@ export const RejectionEmail = ({
                   {cfg.footerCopyright || `© ${new Date().getFullYear()} ${cfg.brandName || "Society"}. All rights reserved.`}
                 </Text>
 
-                {cfg.footerDisclaimer && (
-                  <Text className="text-xs text-muted-foreground mt-2 text-left">
-                    {cfg.footerDisclaimer}
-                  </Text>
-                )}
+                <Text className="text-xs text-muted-foreground mt-2 text-left">
+                  {cfg.footerDisclaimer ||
+                    (cfg.supportEmail
+                      ? `This is an automated email sent by the ${cfg.brandName || "Society"} management system. If you find any mistake, please report at ${cfg.supportEmail}.`
+                      : `This is an automated email sent by the ${cfg.brandName || "Society"} management system.`)}
+                </Text>
 
                 {cfg.supportEmail && (
                   <Text className="text-xs text-muted-foreground mt-1 text-left">

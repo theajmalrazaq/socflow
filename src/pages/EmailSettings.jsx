@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useTransition } from "react";
+import { useEffect, useCallback, useTransition } from "react";
 import { useNavigate, useOutletContext } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -49,9 +49,9 @@ import Loading from "@/components/layout/Loading";
 import { supabase } from "@/lib/supabase";
 import {
   COLOR_PRESETS,
-  getEmailConfig,
   saveEmailConfig,
   resetEmailConfig,
+  buildSocietyEmailConfig,
 } from "@/lib/emailConfig";
 import { renderEmailTemplate, sendEmail } from "@/lib/emailService";
 import { canManageEmailSettings, canManageEmails } from "@/lib/permissions";
@@ -126,6 +126,7 @@ import {
   useSmtpConfigQuery,
   useUpdateSmtpConfigMutation,
 } from "@/hooks/queries/useSettings";
+import { useEmailSettingsStore } from "@/stores/useEmailSettingsStore";
 
 export function EmailSettings() {
   const navigate = useNavigate();
@@ -138,18 +139,41 @@ export function EmailSettings() {
     }
   }, [access, navigate]);
 
-  const [activeSection, setActiveSection] = useState("society_profile");
-  const [formData, setFormData] = useState(() => getEmailConfig());
-  const [selectedTemplate, setSelectedTemplate] = useState("announcement");
-  const [viewMode, setViewMode] = useState("desktop");
-  const [previewHtml, setPreviewHtml] = useState("");
-  const [previewLoading, setPreviewLoading] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
-  const [isSavingSociety, setIsSavingSociety] = useState(false);
-  const [resetDialogOpen, setResetDialogOpen] = useState(false);
-  const [testDialogOpen, setTestDialogOpen] = useState(false);
-  const [testEmailAddress, setTestEmailAddress] = useState("");
-  const [sendingTest, setSendingTest] = useState(false);
+  const {
+    activeSection,
+    setActiveSection,
+    formData,
+    setFormData,
+    selectedTemplate,
+    setSelectedTemplate,
+    viewMode,
+    setViewMode,
+    previewHtml,
+    setPreviewHtml,
+    previewLoading,
+    setPreviewLoading,
+    isSaving,
+    setIsSaving,
+    isSavingSociety,
+    setIsSavingSociety,
+    resetDialogOpen,
+    setResetDialogOpen,
+    testDialogOpen,
+    setTestDialogOpen,
+    testEmailAddress,
+    setTestEmailAddress,
+    sendingTest,
+    setSendingTest,
+    societyData,
+    setSocietyData,
+    smtpData,
+    setSmtpData,
+    showSmtpPassword,
+    setShowSmtpPassword,
+    testingSmtp,
+    setTestingSmtp,
+  } = useEmailSettingsStore();
+
   const [, startTransition] = useTransition();
 
   const { data: loadedProfile, isLoading: profileLoading } = useSocietyProfileQuery();
@@ -157,40 +181,14 @@ export function EmailSettings() {
   const updateSmtpMutation = useUpdateSmtpConfigMutation();
 
   const loading = profileLoading || smtpLoading;
-
-  // Society & Account Profile State
-  const [societyData, setSocietyData] = useState({
-    id: null,
-    name: "",
-    username: "",
-    email: "",
-    adminName: "",
-    logoUrl: "",
-    coverUrl: "",
-    brandingColor: "#2A43F8",
-    instagramUrl: "",
-    linkedinUrl: "",
-    websiteUrl: "",
-  });
-
-  // SMTP & Delivery Credentials State
-  const [smtpData, setSmtpData] = useState({
-    user: "",
-    pass: "",
-    host: "smtp.gmail.com",
-    port: 465,
-    secure: true,
-    fromName: "",
-  });
-  const [showSmtpPassword, setShowSmtpPassword] = useState(false);
   const isSavingSmtp = updateSmtpMutation.isPending;
-  const [testingSmtp, setTestingSmtp] = useState(false);
 
   useEffect(() => {
     if (loadedProfile) {
       setSocietyData(loadedProfile);
+      setFormData((prev) => buildSocietyEmailConfig(loadedProfile, prev));
     }
-  }, [loadedProfile]);
+  }, [loadedProfile, setSocietyData, setFormData]);
 
   useEffect(() => {
     if (loadedSmtp) {
@@ -214,7 +212,6 @@ export function EmailSettings() {
       setPreviewLoading(false);
     }
   }, []);
-
   useEffect(() => {
     const timer = setTimeout(() => {
       startTransition(() => {
@@ -1201,7 +1198,7 @@ export function EmailSettings() {
                         id="footerCopyright"
                         value={formData.footerCopyright}
                         onChange={(e) => handleChange("footerCopyright", e.target.value)}
-                        placeholder="© 2025 [Your Organization]. All rights reserved."
+                        placeholder={`© ${new Date().getFullYear()} ${societyData.name || "[Your Society]"}. All rights reserved.`}
                         className="h-10"
                       />
                     </div>
@@ -1214,7 +1211,7 @@ export function EmailSettings() {
                         id="footerDisclaimer"
                         value={formData.footerDisclaimer}
                         onChange={(e) => handleChange("footerDisclaimer", e.target.value)}
-                        placeholder="e.g. This is an automated email sent on behalf of the organization..."
+                        placeholder={`This is an automated email sent by the ${societyData.name || "Society"} management system. If you find any mistake, please report at ${societyData.email || "our official email"}.`}
                         rows={2}
                         className="text-xs"
                       />

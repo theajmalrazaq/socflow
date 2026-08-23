@@ -24,6 +24,7 @@ import {
 } from "lucide-react";
 import { Certificate } from "@/components/subcomponents/Certificate";
 import { sendCertificateEmail } from "@/lib/emailService.jsx";
+import { getEmailConfig } from "@/lib/emailConfig";
 import Loading from "@/components/layout/Loading";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -76,6 +77,7 @@ import {
   useUpdateRegistrationMutation,
   useDeleteRegistrationMutation,
 } from "@/hooks/queries/useEvents";
+import { useEventDetailsStore } from "@/stores/useEventDetailsStore";
 
 export function EventDetails() {
   const navigator = useNavigate();
@@ -90,19 +92,32 @@ export function EventDetails() {
     }
   }, [permissions, navigator]);
 
-  const [page, setPage] = useState(0);
-  const responsesPerPage = 10;
-  const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
-  const [attendanceFilter, setAttendanceFilter] = useState("all");
+  const {
+    page,
+    setPage,
+    searchTerm,
+    setSearchTerm,
+    statusFilter,
+    setStatusFilter,
+    attendanceFilter,
+    setAttendanceFilter,
+    responseToDelete,
+    setResponseToDelete,
+    isWinnerDialogOpen,
+    setIsWinnerDialogOpen,
+    selectedWinner,
+    setSelectedWinner,
+    winnerPosition,
+    setWinnerPosition,
+    winnerImageUrl,
+    setWinnerImageUrl,
+    processingEmailId,
+    setProcessingEmailId,
+    currentCertificate,
+    setCurrentCertificate,
+  } = useEventDetailsStore();
 
-  const [responseToDelete, setResponseToDelete] = useState(null);
-  const [isWinnerDialogOpen, setIsWinnerDialogOpen] = useState(false);
-  const [selectedWinner, setSelectedWinner] = useState(null);
-  const [winnerPosition, setWinnerPosition] = useState(null);
-  const [winnerImageUrl, setWinnerImageUrl] = useState("");
-  const [processingEmailId, setProcessingEmailId] = useState(null);
-  const [currentCertificate, setCurrentCertificate] = useState(null);
+  const responsesPerPage = 10;
   const certificateRef = useRef(null);
 
   const useDebounce = (value, delay) => {
@@ -326,7 +341,9 @@ export function EventDetails() {
     for (let i = 0; i < 8; i++) {
       result += chars.charAt(Math.floor(Math.random() * chars.length));
     }
-    return `MLSACFD-${result}`;
+    const prefix =
+      getEmailConfig().brandName?.replace(/[^a-zA-Z0-9]/g, "").slice(0, 6).toUpperCase() || "CERT";
+    return `${prefix}-${result}`;
   };
 
   const handleSendCertificate = async (response) => {

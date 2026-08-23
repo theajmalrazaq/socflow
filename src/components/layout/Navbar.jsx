@@ -320,8 +320,7 @@ export function Navbar({ access, user, children }) {
             const isSettingsPath =
               location.pathname.startsWith("/settings") ||
               location.pathname.startsWith("/emails/settings") ||
-              location.pathname.startsWith("/emails/customize") ||
-              location.pathname.startsWith("/manageemails/settings");
+              location.pathname.startsWith("/emails/customize");
 
             const isActive =
               item.path === "/"

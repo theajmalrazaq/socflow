@@ -20,6 +20,7 @@ import { RootLayout } from "./components/layout/RootLayout";
 import { Toaster } from "@/components/ui/sonner";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
+import { ThemeProvider } from "@/lib/theme-provider";
 
 function App() {
   return (
@@ -49,7 +50,7 @@ function App() {
               <Route path="/settings" element={<EmailSettings />} />
               <Route path="/users" element={<Users />} />
 
-              {/* Clean route aliases & backward compatibility redirects */}
+              {/* Clean route aliases */}
               <Route path="/dashboard" element={<Navigate to="/" replace />} />
               <Route path="/home" element={<Navigate to="/" replace />} />
               <Route path="/events/create" element={<Navigate to="/events/new" replace />} />
@@ -57,37 +58,15 @@ function App() {
               <Route path="/emails/customize" element={<Navigate to="/settings" replace />} />
               <Route path="/settings/email" element={<Navigate to="/settings" replace />} />
               <Route path="/settings/emails" element={<Navigate to="/settings" replace />} />
-              <Route path="/manageevents" element={<Navigate to="/events" replace />} />
-              <Route
-                path="/manageevents/eventsdata"
-                element={<Navigate to="/events/details" replace />}
-              />
-              <Route
-                path="/manageevents/newevent"
-                element={<Navigate to="/events/new" replace />}
-              />
-              <Route path="/manageleads" element={<Navigate to="/leads" replace />} />
-              <Route
-                path="/manageleads/leadsdata"
-                element={<Navigate to="/leads/details" replace />}
-              />
-              <Route path="/manageinductions" element={<Navigate to="/inductions" replace />} />
-              <Route path="/managemembers" element={<Navigate to="/members" replace />} />
-              <Route path="/manageemails" element={<Navigate to="/emails" replace />} />
-              <Route
-                path="/manageemails/send"
-                element={<Navigate to="/emails/compose" replace />}
-              />
-              <Route path="/manageemails/settings" element={<Navigate to="/settings" replace />} />
             </Route>
             <Route path="/no-permission" element={<NoPermission />} />
-            <Route path="/nopermission" element={<Navigate to="/no-permission" replace />} />
             <Route path="*" element={<ErrorPage />} />
           </Routes>
         </BrowserRouter>
       </div>
       {/* Portal Toaster outside #root so dialog backdrop-filters never cover it */}
-      {createPortal(<Toaster />, document.getElementById("sonner-root"))}
+      {typeof document !== "undefined" &&
+        createPortal(<Toaster />, document.getElementById("sonner-root") || document.body)}
     </ThemeProvider>
     </QueryClientProvider>
   );

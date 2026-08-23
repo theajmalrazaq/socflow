@@ -86,6 +86,7 @@ import {
   useDeleteInductionMutation,
   useBulkUpdateInductionStatusMutation,
 } from "@/hooks/queries/useInductions";
+import { useInductionStore } from "@/stores/useInductionStore";
 
 export function Inductions() {
   const navigateto = useNavigate();
@@ -98,15 +99,68 @@ export function Inductions() {
     }
   }, [access, navigateto]);
 
-  const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
-  const [teamFilter, setTeamFilter] = useState("all");
-  const [teamsList, _setTeamsList] = useState([]);
-  const [exportFilter, setExportFilter] = useState("all");
-  const [page, setPage] = useState(0);
-  const [responseToView, setResponseToView] = useState(null);
+  const {
+    searchTerm,
+    setSearchTerm,
+    statusFilter,
+    setStatusFilter,
+    teamFilter,
+    setTeamFilter,
+    exportFilter,
+    setExportFilter,
+    page,
+    setPage,
+    responseToView,
+    setResponseToView,
+    responseToDelete,
+    setResponseToDelete,
+    isInterviewDialogOpen,
+    setIsInterviewDialogOpen,
+    interviewCandidate,
+    setInterviewCandidate,
+    interviewData,
+    setInterviewData,
+    startHour,
+    startMinute,
+    startPeriod,
+    endHour,
+    endMinute,
+    endPeriod,
+    isBulkInterviewDialogOpen,
+    setIsBulkInterviewDialogOpen,
+    bulkInterviewData,
+    setBulkInterviewData,
+    bulkStartHour,
+    bulkStartMinute,
+    bulkStartPeriod,
+    bulkEndHour,
+    bulkEndMinute,
+    bulkEndPeriod,
+    bulkProgress,
+    setBulkProgress,
+    bulkResults,
+    setBulkResults,
+    bulkTarget,
+    setBulkTarget,
+    bulkTargetCount,
+    setBulkTargetCount,
+    isBulkProgressDialogOpen,
+    setIsBulkProgressDialogOpen,
+    bulkActionTitle,
+    setBulkActionTitle,
+    isAnnouncementDialogOpen,
+    setIsAnnouncementDialogOpen,
+    announcementData,
+    setAnnouncementData,
+    singleAnnouncementRecipient,
+    setSingleAnnouncementRecipient,
+  } = useInductionStore();
+
+  const [sendingInterview, setSendingInterview] = useState(false);
+  const [sendingBulkInterview, setSendingBulkInterview] = useState(false);
+  const [processingEmailId, setProcessingEmailId] = useState(null);
+
   const responsesPerPage = 10;
-  const [responseToDelete, setResponseToDelete] = useState(null);
 
   const useDebounce = (value, delay) => {
     const [debouncedValue, setDebouncedValue] = useState(value);
@@ -145,64 +199,13 @@ export function Inductions() {
   const filteredResponses = inductionsData?.data || [];
   const totalResponses = inductionsData?.total || 0;
 
-  // Interview Scheduling State
-  const [isInterviewDialogOpen, setIsInterviewDialogOpen] = useState(false);
-  const [interviewCandidate, setInterviewCandidate] = useState(null);
-  const [interviewData, setInterviewData] = useState({
-    date: undefined,
-    // times from <input type="time"> as "HH:MM"
-    startTime: "",
-    endTime: "",
-    interviewType: "online", // online or physical
-    meetingLink: "",
-    room: "",
-    instructions: "",
-  });
-  const [sendingInterview, setSendingInterview] = useState(false);
-  const [isBulkInterviewDialogOpen, setIsBulkInterviewDialogOpen] = useState(false);
-  const [bulkInterviewData, setBulkInterviewData] = useState({
-    date: undefined,
-    startTime: "",
-    endTime: "",
-    interviewType: "online",
-    meetingLink: "",
-    room: "",
-  });
-  const [sendingBulkInterview, setSendingBulkInterview] = useState(false);
-  const [bulkProgress, setBulkProgress] = useState({ current: 0, total: 0 });
-  const [bulkResults, setBulkResults] = useState({ success: [], failed: [] });
-  const [bulkTarget, setBulkTarget] = useState("waiting");
-  const [bulkTargetCount, setBulkTargetCount] = useState(0);
-  const [isAnnouncementDialogOpen, setIsAnnouncementDialogOpen] = useState(false);
-  const [announcementData, setAnnouncementData] = useState({ title: "", message: "" });
-  const [singleAnnouncementRecipient, setSingleAnnouncementRecipient] = useState(null);
-
-  // New states for granular loading and bulk progress
+  // Granular loading states
   const updatingStatusId = updateInductionStatusMutation.isPending
     ? updateInductionStatusMutation.variables?.id
     : null;
   const updatingStatusValue = updateInductionStatusMutation.isPending
     ? updateInductionStatusMutation.variables?.status
     : undefined;
-  const [processingEmailId, setProcessingEmailId] = useState(null);
-  const [isBulkProgressDialogOpen, setIsBulkProgressDialogOpen] = useState(false);
-  const [bulkActionTitle, setBulkActionTitle] = useState("");
-
-  // Time picker states for single interview
-  const [startHour, setStartHour] = useState("");
-  const [startMinute, setStartMinute] = useState("");
-  const [startPeriod, setStartPeriod] = useState("AM");
-  const [endHour, setEndHour] = useState("");
-  const [endMinute, setEndMinute] = useState("");
-  const [endPeriod, setEndPeriod] = useState("AM");
-
-  // Time picker states for bulk interview
-  const [bulkStartHour, setBulkStartHour] = useState("");
-  const [bulkStartMinute, setBulkStartMinute] = useState("");
-  const [bulkStartPeriod, setBulkStartPeriod] = useState("AM");
-  const [bulkEndHour, setBulkEndHour] = useState("");
-  const [bulkEndMinute, setBulkEndMinute] = useState("");
-  const [bulkEndPeriod, setBulkEndPeriod] = useState("AM");
 
   // Time picker options
   const hours = Array.from({ length: 12 }, (_, i) => String(i + 1).padStart(2, "0"));

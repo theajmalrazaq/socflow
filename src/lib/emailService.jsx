@@ -83,7 +83,7 @@ export async function sendEmail({
   const html = await renderEmailTemplate(templateName, { ...templateProps, config: currentConfig });
 
   const senderDisplayName =
-    fromName || currentConfig.senderName || currentConfig.brandName || "MLSA CFD";
+    fromName || currentConfig.senderName || currentConfig.brandName || "Society Team";
 
   // Send email via API
   const response = await fetch("/api/SendEmail", {

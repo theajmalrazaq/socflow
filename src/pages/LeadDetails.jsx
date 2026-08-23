@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import { useLocation, useNavigate, useOutletContext } from "react-router-dom";
 import {
   Mail,
@@ -65,6 +65,8 @@ import {
   useDeleteLeadMemberMutation,
 } from "@/hooks/queries/useLeads";
 
+import { useLeadStore } from "@/stores/useLeadStore";
+
 export function LeadDetails() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -79,23 +81,27 @@ export function LeadDetails() {
     }
   }, [permissions, navigate]);
 
-  const [searchTerm, setSearchTerm] = useState("");
-  const [page, setPage] = useState(0);
+  const {
+    searchTerm,
+    setSearchTerm,
+    page,
+    setPage,
+    exportFilter,
+    setExportFilter,
+    leadToDelete,
+    setLeadToDelete,
+    isCreatingNewMember,
+    setIsCreatingNewMember,
+    isUpdating,
+    setIsUpdating,
+    idToUpdate,
+    setIdToUpdate,
+    memberForm,
+    setMemberFormField,
+    resetMemberForm,
+  } = useLeadStore();
+
   const leadsPerPage = 10;
-  const [leadToDelete, setLeadToDelete] = useState(null);
-  const [newLeadMember, setNewLeadMember] = useState({
-    name: "",
-    roll_no: "",
-    nu_email: "",
-    whatsapp_no: "",
-    designation: "",
-    linkedin: "",
-    avatar: "",
-  });
-  const [idtoupdate, setidtoupdate] = useState(null);
-  const [isCreatingNewMember, setIsCreatingNewMember] = useState(false);
-  const [isupdating, setIsUpdating] = useState(false);
-  const [exportFilter, setExportFilter] = useState("all");
 
   const { data: membersData, isLoading: loading } = useLeadMembersQuery({
     leadId: lead_id,
@@ -120,20 +126,6 @@ export function LeadDetails() {
   const creatingMember = createMemberMutation.isPending;
   const updatingMember = updateMemberMutation.isPending;
 
-  useEffect(() => {
-    if (isupdating && idtoupdate) {
-      setNewLeadMember({
-        name: idtoupdate.name || "",
-        roll_no: idtoupdate.roll_no || "",
-        nu_email: idtoupdate.nu_email || "",
-        whatsapp_no: idtoupdate.whatsapp_no || "",
-        designation: idtoupdate.designation || "",
-        linkedin: idtoupdate.linkedin || "",
-        avatar: idtoupdate.avatar || "",
-      });
-    }
-  }, [isupdating, idtoupdate]);
-
   const handleStatusUpdate = async (id, status) => {
     try {
       await updateMemberMutation.mutateAsync({ id: String(id), status });
@@ -149,44 +141,25 @@ export function LeadDetails() {
   };
 
   const handleCreateNewLead = async () => {
-    if (!newLeadMember.name) {
+    if (!memberForm.name) {
       toast.error("Name cannot be empty.");
       return;
     }
 
     try {
-      await createMemberMutation.mutateAsync(newLeadMember);
-      setNewLeadMember({
-        name: "",
-        roll_no: "",
-        nu_email: "",
-        whatsapp_no: "",
-        designation: "",
-        linkedin: "",
-        avatar: "",
-      });
-      setIsCreatingNewMember(false);
+      await createMemberMutation.mutateAsync(memberForm);
+      resetMemberForm();
     } catch {}
   };
 
   const handleUpdateLead = async () => {
-    if (!idtoupdate) return;
+    if (!idToUpdate) return;
     try {
       await updateMemberMutation.mutateAsync({
-        id: String(idtoupdate.id),
-        ...newLeadMember,
+        id: String(idToUpdate.id),
+        ...memberForm,
       });
-      setIsUpdating(false);
-      setidtoupdate(null);
-      setNewLeadMember({
-        name: "",
-        roll_no: "",
-        nu_email: "",
-        whatsapp_no: "",
-        designation: "",
-        linkedin: "",
-        avatar: "",
-      });
+      resetMemberForm();
     } catch {}
   };
 
@@ -590,8 +563,8 @@ export function LeadDetails() {
                             variant="outline"
                             size="sm"
                             onClick={() => {
+                              setIdToUpdate(lead);
                               setIsUpdating(true);
-                              setidtoupdate(lead);
                             }}
                           >
                             <Edit className="w-3.5 h-3.5 mr-1" />
@@ -657,6 +630,7 @@ export function LeadDetails() {
           </div>
 
           {}
+          {/* Create Member Dialog */}
           <Dialog
             open={isCreatingNewMember}
             onOpenChange={(open) => !open && setIsCreatingNewMember(false)}
@@ -670,69 +644,39 @@ export function LeadDetails() {
               <div className="space-y-3 mt-2">
                 <Input
                   placeholder="Full Name *"
-                  value={newLeadMember.name}
-                  onChange={(e) => setNewLeadMember({ ...newLeadMember, name: e.target.value })}
+                  value={memberForm.name}
+                  onChange={(e) => setMemberFormField("name", e.target.value)}
                 />
                 <Input
                   placeholder="Roll Number"
-                  value={newLeadMember.roll_no}
-                  onChange={(e) =>
-                    setNewLeadMember({
-                      ...newLeadMember,
-                      roll_no: e.target.value,
-                    })
-                  }
+                  value={memberForm.roll_no}
+                  onChange={(e) => setMemberFormField("roll_no", e.target.value)}
                 />
                 <Input
                   placeholder="Email"
                   type="email"
-                  value={newLeadMember.nu_email}
-                  onChange={(e) =>
-                    setNewLeadMember({
-                      ...newLeadMember,
-                      nu_email: e.target.value,
-                    })
-                  }
+                  value={memberForm.nu_email}
+                  onChange={(e) => setMemberFormField("nu_email", e.target.value)}
                 />
                 <Input
                   placeholder="WhatsApp Number"
-                  value={newLeadMember.whatsapp_no}
-                  onChange={(e) =>
-                    setNewLeadMember({
-                      ...newLeadMember,
-                      whatsapp_no: e.target.value,
-                    })
-                  }
+                  value={memberForm.whatsapp_no}
+                  onChange={(e) => setMemberFormField("whatsapp_no", e.target.value)}
                 />
                 <Input
                   placeholder="Designation"
-                  value={newLeadMember.designation}
-                  onChange={(e) =>
-                    setNewLeadMember({
-                      ...newLeadMember,
-                      designation: e.target.value,
-                    })
-                  }
+                  value={memberForm.designation}
+                  onChange={(e) => setMemberFormField("designation", e.target.value)}
                 />
                 <Input
                   placeholder="LinkedIn Profile URL"
-                  value={newLeadMember.linkedin}
-                  onChange={(e) =>
-                    setNewLeadMember({
-                      ...newLeadMember,
-                      linkedin: e.target.value,
-                    })
-                  }
+                  value={memberForm.linkedin}
+                  onChange={(e) => setMemberFormField("linkedin", e.target.value)}
                 />
                 <Input
                   placeholder="Avatar URL"
-                  value={newLeadMember.avatar}
-                  onChange={(e) =>
-                    setNewLeadMember({
-                      ...newLeadMember,
-                      avatar: e.target.value,
-                    })
-                  }
+                  value={memberForm.avatar}
+                  onChange={(e) => setMemberFormField("avatar", e.target.value)}
                 />
               </div>
 
@@ -758,8 +702,8 @@ export function LeadDetails() {
             </DialogContent>
           </Dialog>
 
-          {}
-          <Dialog open={isupdating} onOpenChange={(open) => !open && setIsUpdating(false)}>
+          {/* Update Member Dialog */}
+          <Dialog open={isUpdating} onOpenChange={(open) => !open && setIsUpdating(false)}>
             <DialogContent className="max-h-[80vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>Update Member</DialogTitle>
@@ -769,69 +713,39 @@ export function LeadDetails() {
               <div className="space-y-3 mt-2">
                 <Input
                   placeholder="Full Name *"
-                  value={newLeadMember.name}
-                  onChange={(e) => setNewLeadMember({ ...newLeadMember, name: e.target.value })}
+                  value={memberForm.name}
+                  onChange={(e) => setMemberFormField("name", e.target.value)}
                 />
                 <Input
                   placeholder="Roll Number"
-                  value={newLeadMember.roll_no}
-                  onChange={(e) =>
-                    setNewLeadMember({
-                      ...newLeadMember,
-                      roll_no: e.target.value,
-                    })
-                  }
+                  value={memberForm.roll_no}
+                  onChange={(e) => setMemberFormField("roll_no", e.target.value)}
                 />
                 <Input
                   placeholder="Email"
                   type="email"
-                  value={newLeadMember.nu_email}
-                  onChange={(e) =>
-                    setNewLeadMember({
-                      ...newLeadMember,
-                      nu_email: e.target.value,
-                    })
-                  }
+                  value={memberForm.nu_email}
+                  onChange={(e) => setMemberFormField("nu_email", e.target.value)}
                 />
                 <Input
                   placeholder="WhatsApp Number"
-                  value={newLeadMember.whatsapp_no}
-                  onChange={(e) =>
-                    setNewLeadMember({
-                      ...newLeadMember,
-                      whatsapp_no: e.target.value,
-                    })
-                  }
+                  value={memberForm.whatsapp_no}
+                  onChange={(e) => setMemberFormField("whatsapp_no", e.target.value)}
                 />
                 <Input
                   placeholder="Designation"
-                  value={newLeadMember.designation}
-                  onChange={(e) =>
-                    setNewLeadMember({
-                      ...newLeadMember,
-                      designation: e.target.value,
-                    })
-                  }
+                  value={memberForm.designation}
+                  onChange={(e) => setMemberFormField("designation", e.target.value)}
                 />
                 <Input
                   placeholder="LinkedIn Profile URL"
-                  value={newLeadMember.linkedin}
-                  onChange={(e) =>
-                    setNewLeadMember({
-                      ...newLeadMember,
-                      linkedin: e.target.value,
-                    })
-                  }
+                  value={memberForm.linkedin}
+                  onChange={(e) => setMemberFormField("linkedin", e.target.value)}
                 />
                 <Input
                   placeholder="Avatar URL"
-                  value={newLeadMember.avatar}
-                  onChange={(e) =>
-                    setNewLeadMember({
-                      ...newLeadMember,
-                      avatar: e.target.value,
-                    })
-                  }
+                  value={memberForm.avatar}
+                  onChange={(e) => setMemberFormField("avatar", e.target.value)}
                 />
               </div>
 

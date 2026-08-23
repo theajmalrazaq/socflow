@@ -30,7 +30,7 @@ import { DEFAULT_PERMISSIONS } from "@/lib/permissions";
 import { saveEmailConfig } from "@/lib/emailConfig";
 
 const COLOR_PRESETS = [
-  { name: "MLSA Blue", color: "#2A43F8" },
+  { name: "Socflow Blue", color: "#2A43F8" },
   { name: "Electric Indigo", color: "#4F46E5" },
   { name: "Royal Violet", color: "#7C3AED" },
   { name: "Emerald Green", color: "#059669" },
@@ -536,7 +536,6 @@ export function Signup() {
                       </span>
                     </Label>
 
-                    {/* Presets Grid */}
                     <div className="flex flex-wrap items-center gap-2">
                       {COLOR_PRESETS.map((p) => (
                         <button

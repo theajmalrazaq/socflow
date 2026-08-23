@@ -9,15 +9,12 @@ import { toast } from "sonner";
 import { Loader2, Send, Palette, ExternalLink } from "lucide-react";
 import { getEmailConfig } from "@/lib/emailConfig";
 import { sendAnnouncementEmail } from "@/lib/emailService";
+import { useEmailStore } from "@/stores/useEmailStore";
 
 export function SendEmail() {
   const [loading, setLoading] = useState(false);
   const emailConfig = getEmailConfig();
-  const [formData, setFormData] = useState({
-    to: "",
-    subject: `Announcement from ${emailConfig.brandName || "MLSA CFD"}`,
-    message: "",
-  });
+  const { composeForm, setComposeFormField, resetComposeForm } = useEmailStore();
 
   const handleSend = async (e) => {
     e.preventDefault();
@@ -25,18 +22,13 @@ export function SendEmail() {
 
     try {
       await sendAnnouncementEmail({
-        to: formData.to,
-        title: formData.subject,
-        message: formData.message,
+        to: composeForm.to,
+        title: composeForm.subject,
+        message: composeForm.message,
       });
 
       toast.success("Email sent successfully!");
-
-      setFormData({
-        to: "",
-        subject: `Announcement from ${emailConfig.brandName || "MLSA CFD"}`,
-        message: "",
-      });
+      resetComposeForm();
     } catch (error) {
       console.error("Error sending email:", error);
       toast.error(error.message || "Failed to send email");
@@ -96,8 +88,8 @@ export function SendEmail() {
                   placeholder="recipient@example.com, member2@example.com"
                   type="text"
                   required
-                  value={formData.to}
-                  onChange={(e) => setFormData({ ...formData, to: e.target.value })}
+                  value={composeForm.to}
+                  onChange={(e) => setComposeFormField("to", e.target.value)}
                   className="h-11"
                   disabled={loading}
                 />
@@ -114,8 +106,8 @@ export function SendEmail() {
                   id="subject"
                   placeholder="Email Subject"
                   required
-                  value={formData.subject}
-                  onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
+                  value={composeForm.subject}
+                  onChange={(e) => setComposeFormField("subject", e.target.value)}
                   className="h-11"
                   disabled={loading}
                 />
@@ -129,8 +121,8 @@ export function SendEmail() {
                   id="message"
                   placeholder="Write your email body here..."
                   required
-                  value={formData.message}
-                  onChange={(e) => setFormData({ ...formData, message: e.target.value })}
+                  value={composeForm.message}
+                  onChange={(e) => setComposeFormField("message", e.target.value)}
                   className="min-h-[180px] resize-y text-sm"
                   disabled={loading}
                 />
