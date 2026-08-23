@@ -26,6 +26,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
+import Loading from "@/components/layout/Loading";
 import {
   Dialog,
   DialogContent,
@@ -821,10 +822,7 @@ export function Users() {
       <Dialog open={Boolean(editingUser)} onOpenChange={(open) => !open && setEditingUser(null)}>
         <DialogContent className="sm:max-w-2xl rounded-2xl border border-border/50 bg-background/95 backdrop-blur-2xl shadow-2xl p-6">
           <DialogHeader>
-            <DialogTitle className="text-2xl font-bold flex items-center gap-2.5 font-recoleta">
-              <div className="p-2 rounded-xl bg-primary/10 text-primary border border-primary/20">
-                <SlidersHorizontal className="w-5 h-5" />
-              </div>
+            <DialogTitle className="text-2xl font-bold font-recoleta">
               Configure User Permissions & Role
             </DialogTitle>
             <DialogDescription className="text-muted-foreground">

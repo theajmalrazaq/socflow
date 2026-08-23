@@ -64,7 +64,6 @@ export function useSocietyProfileQuery() {
         brandingColor: currentSoc?.branding_color || cfg.primaryColor || "#2A43F8",
         instagramUrl: currentSoc?.instagram_url || cfg.instagramUrl || "",
         linkedinUrl: currentSoc?.linkedin_url || cfg.linkedinUrl || "",
-        websiteUrl: currentSoc?.website_url || cfg.websiteUrl || "",
       };
     },
     staleTime: 1000 * 60 * 5,

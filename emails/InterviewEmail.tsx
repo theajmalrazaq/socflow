@@ -16,8 +16,7 @@ import {
   Font,
   Button,
 } from "@react-email/components";
-import * as React from "react";
-import { DEFAULT_EMAIL_CONFIG } from "../src/lib/emailConfig";
+import { DEFAULT_EMAIL_CONFIG, getEmailFontSizes } from "../src/lib/emailConfig";
 
 interface InterviewEmailProps {
   candidateName?: string;
@@ -55,6 +54,7 @@ export const InterviewEmail = ({
                 primary: cfg.textColor || "#18181b",
                 brand: cfg.primaryColor || "#2A43F8",
               },
+              fontSize: getEmailFontSizes(cfg.fontSize),
               fontFamily: {
                 sans: ['"Product Sans"', "sans-serif"],
                 serif: ['"Recoleta Regular"', "serif"],

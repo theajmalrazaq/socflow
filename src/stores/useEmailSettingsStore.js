@@ -12,7 +12,6 @@ const INITIAL_SOCIETY_DATA = {
   brandingColor: "#2A43F8",
   instagramUrl: "",
   linkedinUrl: "",
-  websiteUrl: "",
 };
 
 const INITIAL_SMTP_DATA = {

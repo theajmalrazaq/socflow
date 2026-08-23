@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { useOutletContext, useNavigate, useLocation } from "react-router-dom";
 import {
   Edit,
@@ -7,7 +7,6 @@ import {
   ChevronRight,
   Eye,
   PlusCircle,
-  Heart,
   Calendar,
   Clock,
   MapPin,
@@ -1445,15 +1444,14 @@ export function Events() {
           {}
           <div className="w-full mt-12 text-center">
             <div className="flex items-center justify-center text-xs text-muted-foreground">
-              Made With
-              <Heart className="mx-1 w-4 fill-orange-600 animate-pulse" />
+              Powered by{" "}
               <a
-                href="https://theajmalrazaq.github.io"
+                href="https://socflow.app"
                 target="_blank"
-                className="text-orange-600 font-mono font-bold uppercase hover:underline ml-1"
+                className="text-foreground font-medium hover:underline ml-1"
                 rel="noreferrer"
               >
-                Ajmal Razaq Bhatti
+                Socflow
               </a>
             </div>
           </div>

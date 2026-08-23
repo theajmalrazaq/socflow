@@ -39,6 +39,7 @@ export function Navbar({ access, user, children }) {
   const logoutMutation = useLogoutMutation();
 
   const userInfo = user || session?.user || null;
+  const effectiveAccess = access || session?.permissions || session?.role || null;
 
   const userInitials = useMemo(() => {
     if (userInfo?.name && userInfo.name.trim()) {
@@ -58,8 +59,6 @@ export function Navbar({ access, user, children }) {
   const [isCollapsed, setIsCollapsed] = useState(
     () => typeof window !== "undefined" && localStorage.getItem("sidebar-collapsed") === "true",
   );
-
-  const effectiveAccess = access || session?.permissions || session?.role || null;
 
   const handleToggleCollapse = useCallback(() => {
     setIsCollapsed((prev) => {

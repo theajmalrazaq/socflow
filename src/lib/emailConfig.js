@@ -14,11 +14,73 @@ export const DEFAULT_EMAIL_CONFIG = {
   textColor: "#09090B",
   mutedColor: "#71717A",
   borderColor: "#E4E4E7",
+  fontSize: "base", // "sm" | "base" | "lg" | "xl"
   instagramUrl: "",
   linkedinUrl: "",
   footerCopyright: "",
   footerDisclaimer: "",
 };
+
+export const FONT_SIZE_PRESETS = [
+  { id: "sm", label: "Small", basePx: "14px", description: "Compact text sizing" },
+  { id: "base", label: "Default", basePx: "16px", description: "Standard balanced sizing" },
+  { id: "lg", label: "Large", basePx: "18px", description: "High readability sizing" },
+  { id: "xl", label: "Extra Large", basePx: "20px", description: "Spacious prominent sizing" },
+];
+
+export function getEmailFontSizes(size = "base") {
+  const normalized = String(size || "base").toLowerCase();
+  switch (normalized) {
+    case "sm":
+    case "small":
+      return {
+        xs: "11px",
+        sm: "12px",
+        base: "14px",
+        lg: "16px",
+        xl: "18px",
+        "2xl": "21px",
+        "3xl": "26px",
+      };
+    case "lg":
+    case "large":
+      return {
+        xs: "13px",
+        sm: "15px",
+        base: "18px",
+        lg: "20px",
+        xl: "22px",
+        "2xl": "27px",
+        "3xl": "34px",
+      };
+    case "xl":
+    case "xlarge":
+    case "extra-large":
+      return {
+        xs: "14px",
+        sm: "16px",
+        base: "20px",
+        lg: "22px",
+        xl: "25px",
+        "2xl": "30px",
+        "3xl": "38px",
+      };
+    case "base":
+    case "normal":
+    case "medium":
+    case "default":
+    default:
+      return {
+        xs: "12px",
+        sm: "14px",
+        base: "16px",
+        lg: "18px",
+        xl: "20px",
+        "2xl": "24px",
+        "3xl": "30px",
+      };
+  }
+}
 
 export const COLOR_PRESETS = [
   {
@@ -110,6 +172,30 @@ const CONFIG_EVENT = "email_config_updated";
 let activeDbConfig = { ...DEFAULT_EMAIL_CONFIG };
 let isInitialFetched = false;
 
+function isLegacyString(str) {
+  if (!str || typeof str !== "string") return false;
+  const lower = str.toLowerCase();
+  return (
+    lower.includes("mlsa") ||
+    lower.includes("cfd") ||
+    lower.includes("nu.edu.pk") ||
+    lower.includes("f230524") ||
+    lower.includes("management system") ||
+    lower.includes("if you find any mistake")
+  );
+}
+
+function cleanCustomSettings(customSettings = {}) {
+  if (!customSettings || typeof customSettings !== "object") return {};
+  const cleaned = { ...customSettings };
+  for (const key of Object.keys(cleaned)) {
+    if (isLegacyString(cleaned[key])) {
+      delete cleaned[key];
+    }
+  }
+  return cleaned;
+}
+
 /**
  * Build config directly from society record in database
  */
@@ -117,6 +203,18 @@ export function buildSocietyEmailConfig(soc = null, customSettings = {}) {
   const name = soc?.name || "";
   const email = soc?.email || "";
   const year = new Date().getFullYear();
+
+  const cleaned = cleanCustomSettings(customSettings);
+
+  const defaultCopyright = name
+    ? `© ${year} ${name}. All rights reserved.`
+    : `© ${year} Society. All rights reserved.`;
+
+  const defaultDisclaimer = name
+    ? email
+      ? `This email was sent by ${name}. For questions, contact ${email}.`
+      : `This email was sent by ${name}.`
+    : "";
 
   return {
     ...DEFAULT_EMAIL_CONFIG,
@@ -128,15 +226,9 @@ export function buildSocietyEmailConfig(soc = null, customSettings = {}) {
     instagramUrl: soc?.instagram_url || "",
     linkedinUrl: soc?.linkedin_url || "",
     supportEmail: email,
-    footerCopyright: name
-      ? `© ${year} ${name}. All rights reserved.`
-      : `© ${year} Society. All rights reserved.`,
-    footerDisclaimer: name
-      ? email
-        ? `This email was sent by ${name}. For questions, contact ${email}.`
-        : `This email was sent by ${name}.`
-      : "",
-    ...customSettings,
+    ...cleaned,
+    footerCopyright: cleaned.footerCopyright || defaultCopyright,
+    footerDisclaimer: cleaned.footerDisclaimer || defaultDisclaimer,
     // Always preserve real society core details from DB
     ...(name ? { brandName: name, senderName: `${name} Team` } : {}),
     ...(email ? { supportEmail: email } : {}),
@@ -202,10 +294,8 @@ export function getEmailConfig() {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (raw) {
-        activeDbConfig = {
-          ...DEFAULT_EMAIL_CONFIG,
-          ...JSON.parse(raw),
-        };
+        const parsed = JSON.parse(raw);
+        activeDbConfig = buildSocietyEmailConfig(null, parsed);
       }
     } catch {}
   }

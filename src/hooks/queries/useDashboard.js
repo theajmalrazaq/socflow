@@ -16,21 +16,38 @@ export function useDashboardDataQuery() {
             .select("*")
             .lt("date", today)
             .order("date", { ascending: false })
-            .limit(10),
-          supabase.from("eventsResponses").select("id, event_id, created_at"),
-          supabase.from("competitionsResponses").select("id, event_id, created_at"),
+            .limit(10)
+            .then((r) => r.data || [])
+            .catch(() => []),
+          supabase
+            .from("eventsResponses")
+            .select("*")
+            .then((r) => r.data || [])
+            .catch(() => []),
+          supabase
+            .from("competitionsResponses")
+            .select("*")
+            .then((r) => r.data || [])
+            .catch(() => []),
           supabase
             .from("inductionResponses")
-            .select("id, created_at, status, domain")
-            .order("id", { ascending: false }),
-          supabase.from("members").select("id, status, active").order("id", { ascending: false }),
+            .select("*")
+            .order("id", { ascending: false })
+            .then((r) => r.data || [])
+            .catch(() => []),
+          supabase
+            .from("members")
+            .select("*")
+            .order("id", { ascending: false })
+            .then((r) => r.data || [])
+            .catch(() => []),
         ]);
 
-      const fetchEvents = eventsRes.data || [];
-      const evResponses = evResponsesRes.data || [];
-      const compResponses = compResponsesRes.data || [];
-      const inductionResponses = inductionsRes.data || [];
-      const membersResponses = membersRes.data || [];
+      const fetchEvents = eventsRes;
+      const evResponses = evResponsesRes;
+      const compResponses = compResponsesRes;
+      const inductionResponses = inductionsRes;
+      const membersResponses = membersRes;
 
       // Count registrations per event
       const responsesWithCount = fetchEvents.map((event) => {

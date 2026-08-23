@@ -2,10 +2,40 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 
 export const USER_SESSION_QUERY_KEY = ["userSession"];
+const SESSION_CACHE_KEY = "socflow_cached_session";
+
+function getCachedSession() {
+  try {
+    if (typeof window === "undefined") return undefined;
+    const cached = localStorage.getItem(SESSION_CACHE_KEY);
+    if (!cached) return undefined;
+    const parsed = JSON.parse(cached);
+    if (parsed && parsed.isAuthenticated && parsed.user) {
+      return parsed;
+    }
+  } catch {
+    // Ignore JSON parsing errors
+  }
+  return undefined;
+}
+
+function setCachedSession(data) {
+  try {
+    if (typeof window === "undefined") return;
+    if (data && data.isAuthenticated) {
+      localStorage.setItem(SESSION_CACHE_KEY, JSON.stringify(data));
+    } else {
+      localStorage.removeItem(SESSION_CACHE_KEY);
+    }
+  } catch {
+    // Ignore storage errors
+  }
+}
 
 export function useUserSession() {
   return useQuery({
     queryKey: USER_SESSION_QUERY_KEY,
+    initialData: getCachedSession,
     queryFn: async () => {
       const {
         data: { user },
@@ -13,6 +43,7 @@ export function useUserSession() {
       } = await supabase.auth.getUser();
 
       if (authError || !user) {
+        setCachedSession(null);
         return {
           user: null,
           role: null,
@@ -57,12 +88,15 @@ export function useUserSession() {
         console.error("Error loading user profile in session query:", err);
       }
 
-      return {
+      const sessionResult = {
         user: userData,
         role: userData.role,
         permissions,
         isAuthenticated: true,
       };
+
+      setCachedSession(sessionResult);
+      return sessionResult;
     },
     staleTime: 1000 * 60 * 5, // 5 minutes
   });
@@ -77,6 +111,7 @@ export function useLogoutMutation() {
       if (error) throw error;
     },
     onSuccess: () => {
+      setCachedSession(null);
       queryClient.clear();
     },
   });

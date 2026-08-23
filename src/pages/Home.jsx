@@ -7,7 +7,6 @@ import {
   CalendarArrowDown,
   CalendarArrowUp,
   Loader,
-  Heart,
   Calendar,
   Clock,
   MapPin,
@@ -222,8 +221,7 @@ export function Home() {
           {/* Quick Settings Row */}
           {hasPermission(access, "dashboard", "quickSettings") && (
             <div className="p-6 rounded-2xl bg-card/60 border border-border/50 backdrop-blur-xl w-full">
-              <h3 className="text-sm font-bold mb-4 flex items-center gap-2 text-foreground">
-                <Activity className="w-4 h-4" />
+              <h3 className="text-sm font-bold mb-4 text-foreground">
                 Quick Settings
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -427,8 +425,8 @@ export function Home() {
                 </div>
 
                 {/* Minimalist Monochrome Dual Area Chart */}
-                <div className="w-full h-80 min-h-[300px]">
-                  <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
+                <div className="w-full h-80 min-h-[320px]">
+                  <ResponsiveContainer width="100%" height={320} minWidth={0} minHeight={320}>
                     <AreaChart
                       data={timelineChartData}
                       margin={{ left: 0, right: 0, top: 10, bottom: 0 }}
@@ -681,16 +679,14 @@ export function Home() {
           {/* Single clean footer */}
           <CardFooter className="flex flex-row px-0 py-4 w-full">
             <div className="text-xs flex items-center text-muted-foreground">
-              Made With
-              <Heart className="mx-1 w-3.5 h-3.5 text-rose-500 fill-rose-500 animate-pulse" />
-              by{" "}
+              Powered by{" "}
               <a
-                href="https://theajmalrazaq.github.io"
+                href="https://socflow.app"
                 target="_blank"
                 className="ml-1 text-foreground font-medium hover:underline"
                 rel="noreferrer"
               >
-                Ajmal Razaq Bhatti
+                Socflow
               </a>
             </div>
           </CardFooter>

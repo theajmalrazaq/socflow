@@ -4,6 +4,7 @@ import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 import { queryClient } from "@/lib/queryClient";
 import { USER_SESSION_QUERY_KEY } from "@/hooks/queries/useAuth";
+import { LoginForm } from "@/components/login-form";
 
 export function Login() {
   const navigate = useNavigate();

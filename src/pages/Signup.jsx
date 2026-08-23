@@ -11,7 +11,6 @@ import {
   Sparkles,
   Instagram,
   Linkedin,
-  Globe,
   Check,
   X,
   ShieldCheck,
@@ -60,7 +59,6 @@ export function Signup() {
     brandingColor: "#2A43F8",
     instagramUrl: "",
     linkedinUrl: "",
-    websiteUrl: "",
   });
 
   const handleChange = (field, value) => {
@@ -183,7 +181,6 @@ export function Signup() {
             branding_color: formData.brandingColor,
             instagram_url: formData.instagramUrl.trim() || null,
             linkedin_url: formData.linkedinUrl.trim() || null,
-            website_url: formData.websiteUrl.trim() || null,
           })
           .select("id")
           .single();
@@ -220,7 +217,6 @@ export function Signup() {
         primaryColor: formData.brandingColor,
         instagramUrl: formData.instagramUrl.trim(),
         linkedinUrl: formData.linkedinUrl.trim(),
-        websiteUrl: formData.websiteUrl.trim(),
         supportEmail: formData.email.trim(),
       });
 
@@ -560,7 +556,11 @@ export function Signup() {
                       <div className="flex items-center gap-1.5 ml-auto">
                         <input
                           type="color"
-                          value={formData.brandingColor}
+                          value={
+                            /^#[0-9A-Fa-f]{6}$/.test(formData.brandingColor)
+                              ? formData.brandingColor
+                              : "#2A43F8"
+                          }
                           onChange={(e) => handleChange("brandingColor", e.target.value)}
                           className="size-8 rounded-lg border border-border cursor-pointer bg-transparent p-0.5"
                         />
@@ -725,24 +725,6 @@ export function Signup() {
                       placeholder="https://linkedin.com/company/your-society"
                       value={formData.linkedinUrl}
                       onChange={(e) => handleChange("linkedinUrl", e.target.value)}
-                      className="h-10 text-xs"
-                    />
-                  </div>
-
-                  {/* Website */}
-                  <div className="space-y-1.5">
-                    <Label
-                      htmlFor="websiteUrl"
-                      className="text-xs font-semibold flex items-center gap-1.5"
-                    >
-                      <Globe className="size-3.5 text-emerald-500" />
-                      Official Website / Linktree URL (Optional)
-                    </Label>
-                    <Input
-                      id="websiteUrl"
-                      placeholder="https://your-society-website.org"
-                      value={formData.websiteUrl}
-                      onChange={(e) => handleChange("websiteUrl", e.target.value)}
                       className="h-10 text-xs"
                     />
                   </div>

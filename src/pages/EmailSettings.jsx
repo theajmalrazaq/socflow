@@ -6,7 +6,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Dialog,
   DialogContent,
@@ -26,29 +25,31 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import {
-  Palette,
   RotateCcw,
   Save,
   Send,
   Smartphone,
   Monitor,
-  Share2,
   FileText,
   Loader2,
   Building2,
   Mail,
   Server,
-  Sparkles,
   Check,
   Eye,
   EyeOff,
   ExternalLink,
+  Sparkles,
+  Type,
+  Minus,
+  Plus,
 } from "lucide-react";
 import { toast } from "sonner";
 import Loading from "@/components/layout/Loading";
 import { supabase } from "@/lib/supabase";
 import {
   COLOR_PRESETS,
+  FONT_SIZE_PRESETS,
   saveEmailConfig,
   resetEmailConfig,
   buildSocietyEmailConfig,
@@ -229,20 +230,6 @@ export function EmailSettings() {
     }));
   };
 
-  const handleApplyPreset = (preset) => {
-    setFormData((prev) => ({
-      ...prev,
-      primaryColor: preset.primaryColor,
-      buttonTextColor: preset.buttonTextColor,
-      backgroundColor: preset.backgroundColor,
-      cardBackgroundColor: preset.cardBackgroundColor,
-      borderColor: preset.borderColor,
-      textColor: preset.textColor,
-      mutedColor: preset.mutedColor,
-    }));
-    toast.success(`Applied "${preset.name}" color preset`);
-  };
-
   const handleSave = async () => {
     setIsSaving(true);
     try {
@@ -278,7 +265,6 @@ export function EmailSettings() {
             branding_color: societyData.brandingColor,
             instagram_url: societyData.instagramUrl.trim() || null,
             linkedin_url: societyData.linkedinUrl.trim() || null,
-            website_url: societyData.websiteUrl.trim() || null,
             updated_at: new Date().toISOString(),
           })
           .eq("id", socId);
@@ -294,7 +280,6 @@ export function EmailSettings() {
             branding_color: societyData.brandingColor,
             instagram_url: societyData.instagramUrl.trim() || null,
             linkedin_url: societyData.linkedinUrl.trim() || null,
-            website_url: societyData.websiteUrl.trim() || null,
           })
           .select("id")
           .single();
@@ -311,7 +296,6 @@ export function EmailSettings() {
         primaryColor: societyData.brandingColor,
         instagramUrl: societyData.instagramUrl.trim(),
         linkedinUrl: societyData.linkedinUrl.trim(),
-        websiteUrl: societyData.websiteUrl.trim(),
         supportEmail: societyData.email.trim(),
       });
 
@@ -325,7 +309,6 @@ export function EmailSettings() {
         primaryColor: societyData.brandingColor,
         instagramUrl: societyData.instagramUrl.trim(),
         linkedinUrl: societyData.linkedinUrl.trim(),
-        websiteUrl: societyData.websiteUrl.trim(),
         supportEmail: societyData.email.trim(),
       }));
 
@@ -468,15 +451,15 @@ export function EmailSettings() {
   return (
     <div className="w-full flex flex-col items-start px-2 py-4 pb-16">
       {/* Top Setting Category Switcher & Action Buttons Bar */}
-      <div className="w-full flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+      <div className="w-full flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
         {/* Settings Navigation Tabs / Buttons */}
-        <div className="inline-flex items-center gap-1.5 p-1 rounded-xl bg-muted/60 border border-border/60 overflow-x-auto max-w-full">
+        <div className="inline-flex items-center gap-2 p-1.5 rounded-2xl bg-muted/60 border border-border/60 overflow-x-auto max-w-full">
           <button
             type="button"
             onClick={() => setActiveSection("society_profile")}
-            className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs sm:text-sm font-semibold transition-all cursor-pointer ${
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all cursor-pointer ${
               activeSection === "society_profile"
-                ? "bg-background text-foreground shadow-xs"
+                ? "bg-background text-foreground shadow-sm"
                 : "text-muted-foreground hover:text-foreground hover:bg-background/40"
             }`}
           >
@@ -487,9 +470,9 @@ export function EmailSettings() {
           <button
             type="button"
             onClick={() => setActiveSection("email_templates")}
-            className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs sm:text-sm font-semibold transition-all cursor-pointer ${
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all cursor-pointer ${
               activeSection === "email_templates"
-                ? "bg-background text-foreground shadow-xs"
+                ? "bg-background text-foreground shadow-sm"
                 : "text-muted-foreground hover:text-foreground hover:bg-background/40"
             }`}
           >
@@ -500,9 +483,9 @@ export function EmailSettings() {
           <button
             type="button"
             onClick={() => setActiveSection("smtp")}
-            className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs sm:text-sm font-semibold transition-all cursor-pointer ${
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all cursor-pointer ${
               activeSection === "smtp"
-                ? "bg-background text-foreground shadow-xs"
+                ? "bg-background text-foreground shadow-sm"
                 : "text-muted-foreground hover:text-foreground hover:bg-background/40"
             }`}
           >
@@ -669,7 +652,11 @@ export function EmailSettings() {
                       <div className="flex items-center gap-1.5 ml-auto">
                         <input
                           type="color"
-                          value={societyData.brandingColor}
+                          value={
+                            /^#[0-9A-Fa-f]{6}$/.test(societyData.brandingColor)
+                              ? societyData.brandingColor
+                              : "#2A43F8"
+                          }
                           onChange={(e) =>
                             setSocietyData((prev) => ({
                               ...prev,
@@ -731,7 +718,7 @@ export function EmailSettings() {
                   </div>
 
                   {/* Social Handles */}
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
                     <div className="space-y-1.5">
                       <Label htmlFor="socInsta" className="text-xs font-semibold">
                         Instagram
@@ -758,21 +745,6 @@ export function EmailSettings() {
                           setSocietyData((prev) => ({ ...prev, linkedinUrl: e.target.value }))
                         }
                         placeholder="https://linkedin.com/company/your-society"
-                        className="h-9 text-xs"
-                      />
-                    </div>
-
-                    <div className="space-y-1.5">
-                      <Label htmlFor="socWeb" className="text-xs font-semibold">
-                        Website
-                      </Label>
-                      <Input
-                        id="socWeb"
-                        value={societyData.websiteUrl}
-                        onChange={(e) =>
-                          setSocietyData((prev) => ({ ...prev, websiteUrl: e.target.value }))
-                        }
-                        placeholder="https://your-society-website.org"
                         className="h-9 text-xs"
                       />
                     </div>
@@ -885,312 +857,161 @@ export function EmailSettings() {
       {/* SECTION 2: Email Templates Customizer */}
       {activeSection === "email_templates" && (
         <div className="w-full grid grid-cols-1 xl:grid-cols-12 gap-6 items-start">
-          {/* Left Column: Settings Tabs (6 cols on XL) */}
-          <div className="xl:col-span-6 w-full flex flex-col gap-6">
-            <Tabs defaultValue="brand" className="w-full">
-              <TabsList className="grid grid-cols-4 w-full h-11 bg-muted/60 p-1 rounded-xl">
-                <TabsTrigger value="brand" className="text-xs sm:text-sm gap-1.5 cursor-pointer">
-                  <Sparkles className="size-3.5" />
-                  <span>Branding</span>
-                </TabsTrigger>
-                <TabsTrigger value="theme" className="text-xs sm:text-sm gap-1.5 cursor-pointer">
-                  <Palette className="size-3.5" />
-                  <span>Colors</span>
-                </TabsTrigger>
-                <TabsTrigger value="social" className="text-xs sm:text-sm gap-1.5 cursor-pointer">
-                  <Share2 className="size-3.5" />
-                  <span>Social</span>
-                </TabsTrigger>
-                <TabsTrigger value="footer" className="text-xs sm:text-sm gap-1.5 cursor-pointer">
-                  <FileText className="size-3.5" />
-                  <span>Footer</span>
-                </TabsTrigger>
-              </TabsList>
+          {/* Left Column: Footer Customization & Society Brand Info (6 cols on XL) */}
+          <div className="xl:col-span-6 w-full flex flex-col gap-5">
+            {/* Society Brand Inheritance Banner */}
+            <div className="p-4 rounded-2xl bg-muted/40 border border-border/60 flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3 min-w-0">
+                <div
+                  className="size-9 rounded-xl shrink-0 shadow-sm border border-black/10 flex items-center justify-center text-white"
+                  style={{ backgroundColor: societyData.brandingColor || formData.primaryColor }}
+                >
+                  <Sparkles className="size-4" />
+                </div>
+                <div className="min-w-0">
+                  <h4 className="text-xs font-bold truncate text-foreground flex items-center gap-2">
+                    <span>{societyData.name || "Society"} Primary Brand</span>
+                    <span className="font-mono text-[11px] font-normal text-muted-foreground">
+                      {societyData.brandingColor || formData.primaryColor}
+                    </span>
+                  </h4>
+                  <p className="text-[11px] text-muted-foreground truncate">
+                    Templates automatically use your official branding color, logo & cover.
+                  </p>
+                </div>
+              </div>
 
-              {/* TAB 1: Brand Info */}
-              <TabsContent value="brand" className="space-y-4 mt-4">
-                <Card className="rounded-2xl bg-card/80 border border-border/60 backdrop-blur-md shadow-xs">
-                  <CardHeader className="text-left pb-3">
-                    <CardTitle className="text-base font-bold">Brand Identity & Assets</CardTitle>
-                    <CardDescription className="text-xs">
-                      Primary organization details attached to all outgoing email headers.
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-4 text-left">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <div className="space-y-1.5">
-                        <Label htmlFor="brandName" className="text-xs font-semibold">
-                          Brand / Society Name
-                        </Label>
-                        <Input
-                          id="brandName"
-                          value={formData.brandName}
-                          onChange={(e) => handleChange("brandName", e.target.value)}
-                          placeholder="Enter brand or organization name"
-                          className="h-10"
-                        />
-                      </div>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setActiveSection("society_profile")}
+                className="text-xs shrink-0 h-8 cursor-pointer gap-1"
+              >
+                <span>Edit Profile</span>
+                <ExternalLink className="size-3 text-muted-foreground" />
+              </Button>
+            </div>
 
-                      <div className="space-y-1.5">
-                        <Label htmlFor="senderName" className="text-xs font-semibold">
-                          Default Sender Name
-                        </Label>
-                        <Input
-                          id="senderName"
-                          value={formData.senderName}
-                          onChange={(e) => handleChange("senderName", e.target.value)}
-                          placeholder="e.g. Executive Team or Events Team"
-                          className="h-10"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="space-y-1.5">
-                      <Label htmlFor="logoUrl" className="text-xs font-semibold">
-                        Logo Image URL (1:1 Square)
-                      </Label>
-                      <Input
-                        id="logoUrl"
-                        value={formData.logoUrl}
-                        onChange={(e) => handleChange("logoUrl", e.target.value)}
-                        placeholder="https://example.com/logo.png"
-                        className="h-10 text-xs font-mono"
-                      />
-                    </div>
-
-                    <div className="space-y-1.5">
-                      <Label htmlFor="bannerUrl" className="text-xs font-semibold">
-                        Header Banner Image URL (1200 × 400 px)
-                      </Label>
-                      <Input
-                        id="bannerUrl"
-                        value={formData.bannerUrl}
-                        onChange={(e) => handleChange("bannerUrl", e.target.value)}
-                        placeholder="https://example.com/banner.jpg"
-                        className="h-10 text-xs font-mono"
-                      />
-                    </div>
-
-                    <div className="space-y-1.5">
-                      <Label htmlFor="supportEmail" className="text-xs font-semibold">
-                        Support / Reply-To Email
-                      </Label>
-                      <Input
-                        id="supportEmail"
-                        value={formData.supportEmail}
-                        onChange={(e) => handleChange("supportEmail", e.target.value)}
-                        placeholder="support@domain.org or contact@domain.org"
-                        className="h-10 text-xs"
-                      />
-                    </div>
-                  </CardContent>
-                </Card>
-              </TabsContent>
-
-              {/* TAB 2: Colors & Theme */}
-              <TabsContent value="theme" className="space-y-4 mt-4">
-                <Card className="rounded-2xl bg-card/80 border border-border/60 backdrop-blur-md shadow-xs">
-                  <CardHeader className="text-left pb-3">
-                    <CardTitle className="text-base font-bold">
-                      Email Palette & Theme Presets
-                    </CardTitle>
-                    <CardDescription className="text-xs">
-                      Pick a curated palette or customize individual button and card colors.
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-4 text-left">
-                    <div className="space-y-2">
-                      <Label className="text-xs font-semibold">Color Presets</Label>
-                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                        {COLOR_PRESETS.map((preset) => (
-                          <Button
-                            key={preset.name}
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleApplyPreset(preset)}
-                            className="h-auto py-2 px-2.5 flex items-center justify-start gap-2 border-border/80 hover:border-primary/60 cursor-pointer"
-                          >
-                            <span
-                              className="size-3.5 rounded-full border border-black/10 shrink-0"
-                              style={{ backgroundColor: preset.primaryColor }}
-                            />
-                            <span className="text-xs truncate">{preset.name}</span>
-                          </Button>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
-                      <div className="space-y-1.5">
-                        <Label htmlFor="primaryColor" className="text-xs font-semibold">
-                          Primary Button & Accent Color
-                        </Label>
-                        <div className="flex items-center gap-2">
-                          <input
-                            type="color"
-                            id="primaryColorPicker"
-                            value={formData.primaryColor}
-                            onChange={(e) => handleChange("primaryColor", e.target.value)}
-                            className="size-9 rounded-lg border border-border cursor-pointer bg-transparent p-0.5"
-                          />
-                          <Input
-                            id="primaryColor"
-                            value={formData.primaryColor}
-                            onChange={(e) => handleChange("primaryColor", e.target.value)}
-                            className="font-mono text-xs uppercase"
-                          />
+            {/* Typography & Font Sizing Card */}
+            <Card className="rounded-2xl bg-card/80 border border-border/60 backdrop-blur-md shadow-xs">
+              <CardHeader className="text-left pb-3">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-base font-bold">Typography & Font Sizing</CardTitle>
+                  {/* Quick Stepper: Decrease / Increase */}
+                  <div className="flex items-center gap-1 bg-muted/60 p-1 rounded-xl border border-border/50">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      disabled={formData.fontSize === "sm"}
+                      onClick={() => {
+                        const order = ["sm", "base", "lg", "xl"];
+                        const currentIdx = order.indexOf(formData.fontSize || "base");
+                        if (currentIdx > 0) handleChange("fontSize", order[currentIdx - 1]);
+                      }}
+                      className="size-7 rounded-lg cursor-pointer hover:bg-background"
+                      title="Decrease font size"
+                    >
+                      <Minus className="size-3.5 text-muted-foreground" />
+                    </Button>
+                    <span className="text-xs font-mono px-1 font-semibold text-foreground select-none">
+                      {FONT_SIZE_PRESETS.find((p) => p.id === (formData.fontSize || "base"))
+                        ?.basePx || "16px"}
+                    </span>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      disabled={formData.fontSize === "xl"}
+                      onClick={() => {
+                        const order = ["sm", "base", "lg", "xl"];
+                        const currentIdx = order.indexOf(formData.fontSize || "base");
+                        if (currentIdx < order.length - 1)
+                          handleChange("fontSize", order[currentIdx + 1]);
+                      }}
+                      className="size-7 rounded-lg cursor-pointer hover:bg-background"
+                      title="Increase font size"
+                    >
+                      <Plus className="size-3.5 text-muted-foreground" />
+                    </Button>
+                  </div>
+                </div>
+                <CardDescription className="text-xs">
+                  Increase or decrease the typography scale across all outgoing email templates.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3 text-left">
+                {/* 4 Preset Sizing Options */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                  {FONT_SIZE_PRESETS.map((preset) => {
+                    const isActive = (formData.fontSize || "base") === preset.id;
+                    return (
+                      <button
+                        key={preset.id}
+                        type="button"
+                        onClick={() => handleChange("fontSize", preset.id)}
+                        className={`p-3 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between gap-1.5 ${
+                          isActive
+                            ? "bg-primary/10 border-primary shadow-xs ring-1 ring-primary/40"
+                            : "bg-muted/30 border-border/70 hover:border-primary/40 hover:bg-muted/60"
+                        }`}
+                      >
+                        <div className="flex items-center justify-between w-full">
+                          <span className="text-xs font-bold text-foreground">{preset.label}</span>
+                          <span className="font-mono text-[10px] text-muted-foreground px-1.5 py-0.5 rounded bg-background border border-border/50">
+                            {preset.basePx}
+                          </span>
                         </div>
-                      </div>
+                        <span className="text-[10px] text-muted-foreground leading-tight line-clamp-1">
+                          {preset.description}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </CardContent>
+            </Card>
 
-                      <div className="space-y-1.5">
-                        <Label htmlFor="buttonTextColor" className="text-xs font-semibold">
-                          Button Text Color
-                        </Label>
-                        <div className="flex items-center gap-2">
-                          <input
-                            type="color"
-                            id="btnTextPicker"
-                            value={formData.buttonTextColor}
-                            onChange={(e) => handleChange("buttonTextColor", e.target.value)}
-                            className="size-9 rounded-lg border border-border cursor-pointer bg-transparent p-0.5"
-                          />
-                          <Input
-                            id="buttonTextColor"
-                            value={formData.buttonTextColor}
-                            onChange={(e) => handleChange("buttonTextColor", e.target.value)}
-                            className="font-mono text-xs uppercase"
-                          />
-                        </div>
-                      </div>
+            {/* Footer Information & Disclaimers Card */}
+            <Card className="rounded-2xl bg-card/80 border border-border/60 backdrop-blur-md shadow-xs">
+              <CardHeader className="text-left pb-3">
+                <CardTitle className="text-base font-bold">
+                  Footer Information & Disclaimers
+                </CardTitle>
+                <CardDescription className="text-xs">
+                  Customize copyright statement and automated email disclaimers for all templates.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4 text-left">
+                <div className="space-y-1.5">
+                  <Label htmlFor="footerCopyright" className="text-xs font-semibold">
+                    Copyright Notice
+                  </Label>
+                  <Input
+                    id="footerCopyright"
+                    value={formData.footerCopyright}
+                    onChange={(e) => handleChange("footerCopyright", e.target.value)}
+                    placeholder={`© ${new Date().getFullYear()} ${societyData.name || "[Your Society]"}. All rights reserved.`}
+                    className="h-10 text-xs"
+                  />
+                </div>
 
-                      <div className="space-y-1.5">
-                        <Label htmlFor="backgroundColor" className="text-xs font-semibold">
-                          Outer Email Background
-                        </Label>
-                        <div className="flex items-center gap-2">
-                          <input
-                            type="color"
-                            id="bgPicker"
-                            value={formData.backgroundColor}
-                            onChange={(e) => handleChange("backgroundColor", e.target.value)}
-                            className="size-9 rounded-lg border border-border cursor-pointer bg-transparent p-0.5"
-                          />
-                          <Input
-                            id="backgroundColor"
-                            value={formData.backgroundColor}
-                            onChange={(e) => handleChange("backgroundColor", e.target.value)}
-                            className="font-mono text-xs uppercase"
-                          />
-                        </div>
-                      </div>
-
-                      <div className="space-y-1.5">
-                        <Label htmlFor="cardBackgroundColor" className="text-xs font-semibold">
-                          Inner Card Background
-                        </Label>
-                        <div className="flex items-center gap-2">
-                          <input
-                            type="color"
-                            id="cardBgPicker"
-                            value={formData.cardBackgroundColor}
-                            onChange={(e) => handleChange("cardBackgroundColor", e.target.value)}
-                            className="size-9 rounded-lg border border-border cursor-pointer bg-transparent p-0.5"
-                          />
-                          <Input
-                            id="cardBackgroundColor"
-                            value={formData.cardBackgroundColor}
-                            onChange={(e) => handleChange("cardBackgroundColor", e.target.value)}
-                            className="font-mono text-xs uppercase"
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </TabsContent>
-
-              {/* TAB 3: Social Links */}
-              <TabsContent value="social" className="space-y-4 mt-4">
-                <Card className="rounded-2xl bg-card/80 border border-border/60 backdrop-blur-md shadow-xs">
-                  <CardHeader className="text-left pb-3">
-                    <CardTitle className="text-base font-bold">Social Channels & Links</CardTitle>
-                    <CardDescription className="text-xs">
-                      Social profile buttons rendered at the bottom of each email.
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-4 text-left">
-                    <div className="space-y-1.5">
-                      <Label htmlFor="instagramUrl" className="text-xs font-semibold">
-                        Instagram URL
-                      </Label>
-                      <Input
-                        id="instagramUrl"
-                        value={formData.instagramUrl}
-                        onChange={(e) => handleChange("instagramUrl", e.target.value)}
-                        placeholder="https://instagram.com/your_handle"
-                        className="h-10 text-xs"
-                      />
-                    </div>
-
-                    <div className="space-y-1.5">
-                      <Label htmlFor="linkedinUrl" className="text-xs font-semibold">
-                        LinkedIn URL
-                      </Label>
-                      <Input
-                        id="linkedinUrl"
-                        value={formData.linkedinUrl}
-                        onChange={(e) => handleChange("linkedinUrl", e.target.value)}
-                        placeholder="https://linkedin.com/company/your-society"
-                        className="h-10 text-xs"
-                      />
-                    </div>
-                  </CardContent>
-                </Card>
-              </TabsContent>
-
-              {/* TAB 4: Footer & Disclaimers */}
-              <TabsContent value="footer" className="space-y-4 mt-4">
-                <Card className="rounded-2xl bg-card/80 border border-border/60 backdrop-blur-md shadow-xs">
-                  <CardHeader className="text-left pb-3">
-                    <CardTitle className="text-base font-bold">
-                      Footer Information & Disclaimers
-                    </CardTitle>
-                    <CardDescription className="text-xs">
-                      Customize copyright statement and automated email disclaimers.
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-4 text-left">
-                    <div className="space-y-1.5">
-                      <Label htmlFor="footerCopyright" className="text-xs font-semibold">
-                        Copyright Notice
-                      </Label>
-                      <Input
-                        id="footerCopyright"
-                        value={formData.footerCopyright}
-                        onChange={(e) => handleChange("footerCopyright", e.target.value)}
-                        placeholder={`© ${new Date().getFullYear()} ${societyData.name || "[Your Society]"}. All rights reserved.`}
-                        className="h-10"
-                      />
-                    </div>
-
-                    <div className="space-y-1.5">
-                      <Label htmlFor="footerDisclaimer" className="text-xs font-semibold">
-                        Automated Email Disclaimer
-                      </Label>
-                      <Textarea
-                        id="footerDisclaimer"
-                        value={formData.footerDisclaimer}
-                        onChange={(e) => handleChange("footerDisclaimer", e.target.value)}
-                        placeholder={`This email was sent by ${societyData.name || "Society"}. For questions, contact ${societyData.email || "our official email"}.`}
-                        rows={2}
-                        className="text-xs"
-                      />
-                    </div>
-                  </CardContent>
-                </Card>
-              </TabsContent>
-            </Tabs>
+                <div className="space-y-1.5">
+                  <Label htmlFor="footerDisclaimer" className="text-xs font-semibold">
+                    Automated Email Disclaimer
+                  </Label>
+                  <Textarea
+                    id="footerDisclaimer"
+                    value={formData.footerDisclaimer}
+                    onChange={(e) => handleChange("footerDisclaimer", e.target.value)}
+                    placeholder={`This email was sent by ${societyData.name || "Society"}. For questions, contact ${societyData.email || "our official email"}.`}
+                    rows={3}
+                    className="text-xs leading-relaxed"
+                  />
+                </div>
+              </CardContent>
+            </Card>
           </div>
 
           {/* Right Column: Live Interactive Preview (6 cols on XL) */}

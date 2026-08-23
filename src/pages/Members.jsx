@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Search,
@@ -15,7 +15,6 @@ import {
   Eye,
   Check,
   X,
-  Heart,
   Filter,
   ChevronDown,
   Loader,
@@ -779,15 +778,14 @@ export function Members() {
           {}
           <div className="w-full mt-12 text-center">
             <div className="flex items-center justify-center text-xs text-muted-foreground">
-              Made With
-              <Heart className="mx-1 w-4 fill-orange-600 animate-pulse" />
+              Powered by{" "}
               <a
-                href="https://theajmalrazaq.github.io"
+                href="https://socflow.app"
                 target="_blank"
-                className="text-orange-600 font-mono font-bold uppercase hover:underline ml-1"
+                className="text-foreground font-medium hover:underline ml-1"
                 rel="noreferrer"
               >
-                Ajmal Razaq Bhatti
+                Socflow
               </a>
             </div>
           </div>

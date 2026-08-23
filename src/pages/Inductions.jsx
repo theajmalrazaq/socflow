@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
   File,
   Mail,
@@ -13,7 +13,6 @@ import {
   ChevronRight,
   ChevronDown,
   Eye,
-  Heart,
   Users,
   Phone,
   GraduationCap,
@@ -121,21 +120,33 @@ export function Inductions() {
     interviewData,
     setInterviewData,
     startHour,
+    setStartHour,
     startMinute,
+    setStartMinute,
     startPeriod,
+    setStartPeriod,
     endHour,
+    setEndHour,
     endMinute,
+    setEndMinute,
     endPeriod,
+    setEndPeriod,
     isBulkInterviewDialogOpen,
     setIsBulkInterviewDialogOpen,
     bulkInterviewData,
     setBulkInterviewData,
     bulkStartHour,
+    setBulkStartHour,
     bulkStartMinute,
+    setBulkStartMinute,
     bulkStartPeriod,
+    setBulkStartPeriod,
     bulkEndHour,
+    setBulkEndHour,
     bulkEndMinute,
+    setBulkEndMinute,
     bulkEndPeriod,
+    setBulkEndPeriod,
     bulkProgress,
     setBulkProgress,
     bulkResults,
@@ -198,6 +209,11 @@ export function Inductions() {
 
   const filteredResponses = inductionsData?.data || [];
   const totalResponses = inductionsData?.total || 0;
+
+  const teamsList = useMemo(() => {
+    const found = filteredResponses.flatMap((d) => (d && d.team ? [String(d.team)] : []));
+    return Array.from(new Set(found));
+  }, [filteredResponses]);
 
   // Granular loading states
   const updatingStatusId = updateInductionStatusMutation.isPending
@@ -1392,15 +1408,14 @@ export function Inductions() {
           {}
           <div className="w-full mt-12 text-center">
             <div className="flex items-center justify-center text-xs text-muted-foreground">
-              Made With
-              <Heart className="mx-1 w-4 fill-orange-600 animate-pulse" />
+              Powered by{" "}
               <a
-                href="https://theajmalrazaq.github.io"
+                href="https://socflow.app"
                 target="_blank"
-                className="text-orange-600 font-mono font-bold uppercase hover:underline ml-1"
+                className="text-foreground font-medium hover:underline ml-1"
                 rel="noreferrer"
               >
-                Ajmal Razaq Bhatti
+                Socflow
               </a>
             </div>
           </div>
