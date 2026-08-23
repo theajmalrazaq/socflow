@@ -10,7 +10,6 @@ import {
   Calendar,
   Clock,
   MapPin,
-  Activity,
   ArrowUpRight,
   Send,
   User,

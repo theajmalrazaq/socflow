@@ -30,7 +30,6 @@ import {
   Send,
   Smartphone,
   Monitor,
-  FileText,
   Loader2,
   Building2,
   Mail,
@@ -40,7 +39,6 @@ import {
   EyeOff,
   ExternalLink,
   Sparkles,
-  Type,
   Minus,
   Plus,
 } from "lucide-react";
