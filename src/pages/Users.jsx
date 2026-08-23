@@ -154,11 +154,11 @@ function PermissionForm({ currentMatrix, matrixSetter, togglePageMaster, toggleS
   const [expanded, setExpanded] = useState({
     dashboard: true,
     events: true,
-    leads: true,
-    inductions: true,
-    members: true,
-    emails: true,
-    users: true,
+    leads: false,
+    inductions: false,
+    members: false,
+    emails: false,
+    users: false,
   });
 
   const toggleExpandSection = (key) => {
@@ -168,33 +168,35 @@ function PermissionForm({ currentMatrix, matrixSetter, togglePageMaster, toggleS
     }));
   };
 
+  const activeModulesCount = PERMISSION_CONFIG.filter(
+    (c) => currentMatrix[c.key]?.enabled,
+  ).length;
+
   return (
-    <div className="space-y-4 max-h-[500px] overflow-y-auto pr-1 py-1">
-      {/* Quick Actions Bar */}
-      <div className="p-3.5 rounded-xl bg-background/50 border border-border/50 backdrop-blur-md mb-4 flex items-center justify-between">
-        <div>
-          <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider block">
-            Functional Access Toggles
-          </span>
-          <span className="text-[11px] text-muted-foreground">
-            Configure specific pages and capabilities for this user
+    <div className="space-y-2.5 max-h-[46vh] overflow-y-auto pr-1 py-0.5">
+      {/* Quick Actions & Status Bar */}
+      <div className="p-2.5 rounded-xl bg-muted/30 border border-border/60 flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2">
+          <span className="text-[11px] font-bold text-foreground">Module Access</span>
+          <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold bg-primary/10 text-primary border border-primary/20">
+            {activeModulesCount} of {PERMISSION_CONFIG.length} Active
           </span>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5">
           <Button
             type="button"
             variant="outline"
             size="sm"
-            className="h-8 text-xs gap-1.5 rounded-lg border-primary/30 hover:bg-primary/10 text-primary"
+            className="h-7 text-[11px] gap-1 rounded-lg border-primary/30 hover:bg-primary/10 text-primary px-2"
             onClick={() => matrixSetter(DEFAULT_PERMISSIONS)}
           >
-            <Check className="w-3.5 h-3.5" /> Select All
+            <Check className="w-3 h-3" /> Select All
           </Button>
           <Button
             type="button"
             variant="outline"
             size="sm"
-            className="h-8 text-xs gap-1.5 rounded-lg border-border hover:bg-muted/50 text-muted-foreground"
+            className="h-7 text-[11px] gap-1 rounded-lg border-border hover:bg-muted/50 text-muted-foreground px-2"
             onClick={() => matrixSetter(NO_PERMISSIONS)}
           >
             Clear All
@@ -202,8 +204,8 @@ function PermissionForm({ currentMatrix, matrixSetter, togglePageMaster, toggleS
         </div>
       </div>
 
-      {/* Nested Permission Cards */}
-      <div className="space-y-3.5">
+      {/* Modern Permission Module Cards */}
+      <div className="space-y-2">
         {PERMISSION_CONFIG.map((config) => {
           const IconObj = config.icon;
           const pageState = currentMatrix[config.key] || {
@@ -211,101 +213,120 @@ function PermissionForm({ currentMatrix, matrixSetter, togglePageMaster, toggleS
             sub: {},
           };
           const isExpanded = Boolean(expanded[config.key]);
+          const totalSubs = config.subPermissions.length;
+          const activeSubs =
+            totalSubs > 0
+              ? config.subPermissions.filter((s) => pageState.sub?.[s.key]).length
+              : 0;
 
           return (
             <div
               key={config.key}
-              className={`rounded-2xl border transition-all ${
+              className={`rounded-xl border transition-all duration-200 overflow-hidden ${
                 pageState.enabled
-                  ? "border-primary/40 bg-background/70 shadow-xs"
-                  : "border-border/50 bg-background/30"
+                  ? "border-border/80 bg-card/80 shadow-xs"
+                  : "border-border/40 bg-card/30 opacity-70"
               }`}
             >
-              {/* Header Row */}
-              <div className="p-4 flex items-center justify-between select-none">
+              {/* Module Header */}
+              <div className="px-3 py-2.5 flex items-center justify-between gap-3 select-none bg-muted/20">
                 <div
-                  className="flex items-center gap-3 cursor-pointer"
+                  className="flex items-center gap-2.5 flex-1 min-w-0 cursor-pointer"
                   onClick={() => toggleExpandSection(config.key)}
                 >
                   <div
-                    className={`p-2.5 rounded-xl ${
+                    className={`p-1.5 rounded-lg shrink-0 transition-colors ${
                       pageState.enabled
                         ? "bg-primary/10 text-primary border border-primary/20"
-                        : "bg-muted/60 text-muted-foreground border border-border/40"
+                        : "bg-muted text-muted-foreground border border-border/40"
                     }`}
                   >
-                    <IconObj className="w-5 h-5" />
+                    <IconObj className="w-4 h-4" />
                   </div>
 
-                  <div>
-                    <h4 className="text-base font-semibold text-foreground">{config.title}</h4>
-                    <p className="text-xs text-muted-foreground">
-                      {pageState.enabled ? "Page enabled for this user" : "Page access disabled"}
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2">
+                      <h4 className="text-xs sm:text-sm font-semibold text-foreground truncate">
+                        {config.title}
+                      </h4>
+                      {pageState.enabled && totalSubs > 0 && (
+                        <span className="text-[10px] font-medium text-emerald-500 bg-emerald-500/10 px-1.5 py-0.2 rounded border border-emerald-500/20 shrink-0">
+                          {activeSubs}/{totalSubs}
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-[10px] text-muted-foreground truncate">
+                      {pageState.enabled
+                        ? totalSubs > 0
+                          ? activeSubs === totalSubs
+                            ? "Full permissions enabled"
+                            : `${activeSubs} permissions granted`
+                          : "Access enabled"
+                        : "Access disabled"}
                     </p>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2 shrink-0">
                   <Switch
                     checked={Boolean(pageState.enabled)}
                     onCheckedChange={(checked) =>
                       togglePageMaster(matrixSetter, config.key, checked)
                     }
                   />
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8 text-muted-foreground hover:text-foreground"
-                    onClick={() => toggleExpandSection(config.key)}
-                  >
-                    {isExpanded ? (
-                      <ChevronDown className="w-4 h-4" />
-                    ) : (
-                      <ChevronRight className="w-4 h-4" />
-                    )}
-                  </Button>
+                  {totalSubs > 0 && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7 text-muted-foreground hover:text-foreground hover:bg-muted/60"
+                      onClick={() => toggleExpandSection(config.key)}
+                      title={isExpanded ? "Collapse sub-permissions" : "Expand sub-permissions"}
+                    >
+                      {isExpanded ? (
+                        <ChevronDown className="w-3.5 h-3.5" />
+                      ) : (
+                        <ChevronRight className="w-3.5 h-3.5" />
+                      )}
+                    </Button>
+                  )}
                 </div>
               </div>
 
-              {/* Sublist Items with Rounded Branch Lines */}
-              {isExpanded && config.subPermissions.length > 0 && (
-                <div className="px-5 pb-4 pt-1 relative space-y-2.5">
-                  {config.subPermissions.map((sub, idx) => {
+              {/* Modern Inset Sub-Permissions List */}
+              {isExpanded && totalSubs > 0 && (
+                <div className="border-t border-border/40 bg-background/50 divide-y divide-border/20">
+                  {config.subPermissions.map((sub) => {
                     const isSubChecked = Boolean(pageState.sub?.[sub.key]);
-                    const isFirst = idx === 0;
 
                     return (
-                      <div key={sub.key} className="relative flex items-center pl-8">
-                        {/* Rounded SVG Branch Line */}
-                        <svg
-                          className={`absolute left-[22px] text-border/80 stroke-current fill-none pointer-events-none z-0 ${
-                            isFirst ? "-top-6 w-8 h-11" : "-top-8 w-8 h-13"
-                          }`}
-                          viewBox={isFirst ? "0 0 32 44" : "0 0 32 52"}
-                        >
-                          <path
-                            d={
-                              isFirst
-                                ? "M 2 0 V 24 Q 2 32 12 32 H 26"
-                                : "M 2 0 V 32 Q 2 40 12 40 H 26"
-                            }
-                            strokeWidth="2"
-                            strokeLinecap="round"
+                      <div
+                        key={sub.key}
+                        className={`px-3.5 py-2 flex items-center justify-between gap-3 transition-colors ${
+                          pageState.enabled
+                            ? "hover:bg-muted/30"
+                            : "opacity-50 pointer-events-none"
+                        }`}
+                      >
+                        <div className="flex items-center gap-2 min-w-0 pr-2">
+                          <div
+                            className={`size-1.5 rounded-full shrink-0 ${
+                              isSubChecked && pageState.enabled
+                                ? "bg-primary"
+                                : "bg-muted-foreground/40"
+                            }`}
                           />
-                        </svg>
-
-                        <div className="relative z-10 flex-1 flex items-center justify-between p-3 rounded-xl bg-background/80 border border-border/50 backdrop-blur-md hover:bg-background/95 transition-all">
-                          <span className="text-xs font-medium text-foreground pr-3">
+                          <span className="text-xs font-medium text-foreground/90 leading-tight">
                             {sub.label}
                           </span>
-                          <Switch
-                            checked={isSubChecked}
-                            onCheckedChange={(checked) =>
-                              toggleSubPermission(matrixSetter, config.key, sub.key, checked)
-                            }
-                          />
                         </div>
+                        <Switch
+                          checked={isSubChecked && pageState.enabled}
+                          disabled={!pageState.enabled}
+                          onCheckedChange={(checked) =>
+                            toggleSubPermission(matrixSetter, config.key, sub.key, checked)
+                          }
+                        />
                       </div>
                     );
                   })}
@@ -645,23 +666,23 @@ export function Users() {
 
       {/* MULTI-STEP CREATE USER DIALOG MODAL */}
       <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-        <DialogContent className="sm:max-w-2xl">
-          <DialogHeader className="pr-12">
-            <div className="flex items-center justify-between gap-4">
-              <DialogTitle className="text-2xl font-bold tracking-tight">
+        <DialogContent className="sm:max-w-xl max-h-[85vh] flex flex-col p-5 overflow-hidden">
+          <DialogHeader className="pr-10 pb-1">
+            <div className="flex items-center justify-between gap-3">
+              <DialogTitle className="text-xl font-bold tracking-tight">
                 Create User Account
               </DialogTitle>
-              <span className="text-xs font-semibold px-3 py-1 rounded-full bg-muted/60 text-muted-foreground border border-border/40 shrink-0">
+              <span className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-muted/60 text-muted-foreground border border-border/40 shrink-0">
                 Step {createStep} of 2
               </span>
             </div>
-            <DialogDescription className="text-sm text-muted-foreground mt-1">
+            <DialogDescription className="text-xs text-muted-foreground">
               Configure member details and assign access privileges.
             </DialogDescription>
           </DialogHeader>
 
           {/* Stepper Progress Bar */}
-          <div className="flex items-center gap-6 border-b border-border/40 pb-4 mb-3 overflow-x-auto">
+          <div className="flex items-center gap-4 border-b border-border/40 pb-2.5 mb-2 overflow-x-auto">
             {[
               { step: 1, label: "Account Credentials" },
               { step: 2, label: "Access Permissions" },
@@ -673,9 +694,9 @@ export function Users() {
                   if (s.step < createStep) setCreateStep(s.step);
                 }}
                 className={cn(
-                  "flex items-center gap-2 text-xs font-medium transition-all shrink-0 py-1 px-3 rounded-full",
+                  "flex items-center gap-1.5 text-xs font-medium transition-all shrink-0 py-0.5 px-2.5 rounded-full",
                   createStep === s.step
-                    ? "bg-foreground text-background font-semibold shadow-sm"
+                    ? "bg-foreground text-background font-semibold shadow-xs"
                     : createStep > s.step
                       ? "text-emerald-500 hover:text-emerald-400 cursor-pointer"
                       : "text-muted-foreground/70 cursor-not-allowed",
@@ -683,7 +704,7 @@ export function Users() {
               >
                 <span
                   className={cn(
-                    "w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold",
+                    "size-4 rounded-full flex items-center justify-center text-[9px] font-bold",
                     createStep === s.step
                       ? "bg-background text-foreground"
                       : createStep > s.step
@@ -698,12 +719,12 @@ export function Users() {
             ))}
           </div>
 
-          <form onSubmit={handleCreateUser} className="space-y-5 pt-2">
+          <form onSubmit={handleCreateUser} className="flex-1 flex flex-col min-h-0 space-y-3">
             {createStep === 1 ? (
               /* STEP 1: Account Info Form */
-              <div className="space-y-4 py-2">
+              <div className="space-y-3.5 py-1">
                 <div className="space-y-1.5">
-                  <Label htmlFor="name">Full Name</Label>
+                  <Label htmlFor="name" className="text-xs font-semibold">Full Name</Label>
                   <div className="relative">
                     <User className="w-4 h-4 text-muted-foreground absolute left-3.5 top-1/2 -translate-y-1/2 z-10 pointer-events-none" />
                     <Input
@@ -711,14 +732,14 @@ export function Users() {
                       placeholder="e.g. Sarah Ahmed"
                       value={newUser.name}
                       onChange={(e) => setNewUserField("name", e.target.value)}
-                      className="pl-10 h-11 bg-background/60 backdrop-blur-xl border-border/50"
+                      className="pl-10 h-10 text-sm bg-background/60 border-border/50 rounded-xl"
                       required
                     />
                   </div>
                 </div>
 
                 <div className="space-y-1.5">
-                  <Label htmlFor="email">Email Address</Label>
+                  <Label htmlFor="email" className="text-xs font-semibold">Email Address</Label>
                   <div className="relative">
                     <Mail className="w-4 h-4 text-muted-foreground absolute left-3.5 top-1/2 -translate-y-1/2 z-10 pointer-events-none" />
                     <Input
@@ -727,14 +748,14 @@ export function Users() {
                       placeholder="sarah@example.com"
                       value={newUser.email}
                       onChange={(e) => setNewUserField("email", e.target.value)}
-                      className="pl-10 h-11 bg-background/60 backdrop-blur-xl border-border/50"
+                      className="pl-10 h-10 text-sm bg-background/60 border-border/50 rounded-xl"
                       required
                     />
                   </div>
                 </div>
 
                 <div className="space-y-1.5">
-                  <Label htmlFor="role">Role / Designation</Label>
+                  <Label htmlFor="role" className="text-xs font-semibold">Role / Designation</Label>
                   <div className="relative">
                     <Shield className="w-4 h-4 text-muted-foreground absolute left-3.5 top-1/2 -translate-y-1/2 z-10 pointer-events-none" />
                     <Input
@@ -742,13 +763,13 @@ export function Users() {
                       placeholder="e.g. President, Media Lead, Event Coordinator"
                       value={newUser.role}
                       onChange={(e) => setNewUserField("role", e.target.value)}
-                      className="pl-10 h-11 bg-background/60 backdrop-blur-xl border-border/50"
+                      className="pl-10 h-10 text-sm bg-background/60 border-border/50 rounded-xl"
                     />
                   </div>
                 </div>
 
                 <div className="space-y-1.5">
-                  <Label htmlFor="password">Initial Password</Label>
+                  <Label htmlFor="password" className="text-xs font-semibold">Initial Password</Label>
                   <div className="relative">
                     <Lock className="w-4 h-4 text-muted-foreground absolute left-3.5 top-1/2 -translate-y-1/2 z-10 pointer-events-none" />
                     <Input
@@ -757,7 +778,7 @@ export function Users() {
                       placeholder="Minimum 6 characters"
                       value={newUser.password}
                       onChange={(e) => setNewUserField("password", e.target.value)}
-                      className="pl-10 h-11 bg-background/60 backdrop-blur-xl border-border/50"
+                      className="pl-10 h-10 text-sm bg-background/60 border-border/50 rounded-xl"
                       required
                     />
                   </div>
@@ -765,7 +786,7 @@ export function Users() {
               </div>
             ) : (
               /* STEP 2: Page List & Sub-Permission Toggles */
-              <div className="space-y-3 pt-1">
+              <div className="flex-1 min-h-0">
                 <PermissionForm
                   currentMatrix={permissionMatrix}
                   matrixSetter={setPermissionMatrix}
@@ -775,19 +796,19 @@ export function Users() {
               </div>
             )}
 
-            <DialogFooter className="pt-4 gap-2 border-t border-border/40">
+            <DialogFooter className="pt-3 gap-2 border-t border-border/40 mt-auto">
               {createStep === 1 ? (
                 <>
                   <Button
                     type="button"
                     variant="outline"
-                    className="h-11"
+                    className="h-9 text-xs"
                     onClick={() => setIsCreateOpen(false)}
                   >
                     Cancel
                   </Button>
-                  <Button type="button" className="h-11 gap-2" onClick={handleNextStep}>
-                    Continue to Permissions <ChevronRight className="w-4 h-4" />
+                  <Button type="button" className="h-9 text-xs gap-1.5" onClick={handleNextStep}>
+                    Continue to Permissions <ChevronRight className="w-3.5 h-3.5" />
                   </Button>
                 </>
               ) : (
@@ -795,19 +816,19 @@ export function Users() {
                   <Button
                     type="button"
                     variant="outline"
-                    className="h-11"
+                    className="h-9 text-xs"
                     onClick={() => setCreateStep(1)}
                   >
                     ← Back to Account Info
                   </Button>
-                  <Button type="submit" disabled={creating} className="h-11 gap-2">
+                  <Button type="submit" disabled={creating} className="h-9 text-xs gap-1.5">
                     {creating ? (
                       <>
-                        <Loader className="w-4 h-4 animate-spin" /> Creating...
+                        <Loader className="w-3.5 h-3.5 animate-spin" /> Creating...
                       </>
                     ) : (
                       <>
-                        <Check className="w-4 h-4" /> Save & Create Account
+                        <Check className="w-3.5 h-3.5" /> Save & Create Account
                       </>
                     )}
                   </Button>
@@ -820,21 +841,21 @@ export function Users() {
 
       {/* EDIT USER PERMISSIONS DIALOG MODAL */}
       <Dialog open={Boolean(editingUser)} onOpenChange={(open) => !open && setEditingUser(null)}>
-        <DialogContent className="sm:max-w-2xl rounded-2xl border border-border/50 bg-background/95 backdrop-blur-2xl shadow-2xl p-6">
-          <DialogHeader>
-            <DialogTitle className="text-2xl font-bold font-recoleta">
+        <DialogContent className="sm:max-w-xl max-h-[85vh] flex flex-col rounded-2xl border border-border/50 bg-background/95 backdrop-blur-2xl shadow-2xl p-5">
+          <DialogHeader className="pb-1">
+            <DialogTitle className="text-xl font-bold font-recoleta">
               Configure User Permissions & Role
             </DialogTitle>
-            <DialogDescription className="text-muted-foreground">
+            <DialogDescription className="text-xs text-muted-foreground">
               Modify role designation and functional permissions for {editingUser?.name} (
               {editingUser?.email})
             </DialogDescription>
           </DialogHeader>
 
           {editingUser && (
-            <div className="space-y-4 pt-2">
-              <div className="space-y-1.5 pb-2">
-                <Label htmlFor="edit-role">Role / Designation</Label>
+            <div className="flex-1 flex flex-col min-h-0 space-y-3 pt-1">
+              <div className="space-y-1.5">
+                <Label htmlFor="edit-role" className="text-xs font-semibold">Role / Designation</Label>
                 <div className="relative">
                   <Shield className="w-4 h-4 text-muted-foreground absolute left-3.5 top-1/2 -translate-y-1/2 z-10 pointer-events-none" />
                   <Input
@@ -842,36 +863,38 @@ export function Users() {
                     placeholder="e.g. President, Tech Lead, Event Organizer"
                     value={editingUser.role || ""}
                     onChange={(e) => setEditingUserField("role", e.target.value)}
-                    className="pl-10 h-11 bg-background/60 backdrop-blur-xl border-border/50"
+                    className="pl-10 h-10 text-sm bg-background/60 border-border/50 rounded-xl"
                   />
                 </div>
               </div>
 
-              <PermissionForm
-                currentMatrix={editPermissions}
-                matrixSetter={setEditPermissions}
-                togglePageMaster={togglePageMaster}
-                toggleSubPermission={toggleSubPermission}
-              />
+              <div className="flex-1 min-h-0">
+                <PermissionForm
+                  currentMatrix={editPermissions}
+                  matrixSetter={setEditPermissions}
+                  togglePageMaster={togglePageMaster}
+                  toggleSubPermission={toggleSubPermission}
+                />
+              </div>
             </div>
           )}
 
-          <DialogFooter className="pt-4 gap-2">
-            <Button variant="outline" className="h-11" onClick={() => setEditingUser(null)}>
+          <DialogFooter className="pt-3 gap-2 border-t border-border/40 mt-auto">
+            <Button variant="outline" className="h-9 text-xs" onClick={() => setEditingUser(null)}>
               Cancel
             </Button>
             <Button
               onClick={handleUpdateUserPermissions}
               disabled={updating}
-              className="h-11 gap-2"
+              className="h-9 text-xs gap-1.5"
             >
               {updating ? (
                 <>
-                  <Loader className="w-4 h-4 animate-spin" /> Saving...
+                  <Loader className="w-3.5 h-3.5 animate-spin" /> Saving...
                 </>
               ) : (
                 <>
-                  <Check className="w-4 h-4" /> Save Permission Changes
+                  <Check className="w-3.5 h-3.5" /> Save Permission Changes
                 </>
               )}
             </Button>
