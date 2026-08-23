@@ -32,4 +32,3 @@ export const useEventDetailsStore = create((set) => ({
       winnerImageUrl: "",
     }),
 }));
-

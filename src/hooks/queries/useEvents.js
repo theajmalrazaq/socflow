@@ -16,7 +16,10 @@ export function useEventsQuery({ page = 0, limit = 10, search = "", status = "al
   return useQuery({
     queryKey: [...EVENTS_QUERY_KEY, { page, limit, search, status }],
     queryFn: async () => {
-      let query = supabase.from("events").select("*", { count: "exact" }).order("id", { ascending: false });
+      let query = supabase
+        .from("events")
+        .select("*", { count: "exact" })
+        .order("id", { ascending: false });
 
       if (page !== undefined && limit !== undefined) {
         query = query.range(page * limit, (page + 1) * limit - 1);
@@ -90,11 +93,7 @@ export function useEventDetailsQuery(eventId) {
     queryKey: EVENT_DETAILS_KEY(eventId),
     queryFn: async () => {
       if (!eventId) return null;
-      const { data, error } = await supabase
-        .from("events")
-        .select("*")
-        .eq("id", eventId)
-        .single();
+      const { data, error } = await supabase.from("events").select("*").eq("id", eventId).single();
       if (error) throw error;
       return data;
     },
@@ -217,11 +216,17 @@ export function useEventRegistrationsQuery({
         .order("id", { ascending: false });
 
       if (status !== "all" && isCompetition) {
-        query = query.eq("status", status === "verified" ? true : status === "rejected" ? false : null);
+        query = query.eq(
+          "status",
+          status === "verified" ? true : status === "rejected" ? false : null,
+        );
       }
 
       if (attendance !== "all") {
-        query = query.eq("attendance", attendance === "present" ? true : attendance === "absent" ? false : null);
+        query = query.eq(
+          "attendance",
+          attendance === "present" ? true : attendance === "absent" ? false : null,
+        );
       }
 
       query = query.range(page * limit, (page + 1) * limit - 1);
@@ -284,10 +289,7 @@ export function useDeleteWinnerMutation(eventId) {
 
   return useMutation({
     mutationFn: async (winnerId) => {
-      const { error } = await supabase
-        .from("competitionWinners")
-        .delete()
-        .eq("id", winnerId);
+      const { error } = await supabase.from("competitionWinners").delete().eq("id", winnerId);
       if (error) throw error;
       return winnerId;
     },
@@ -351,4 +353,3 @@ export function useDeleteRegistrationMutation(eventId, isCompetition) {
     },
   });
 }
-

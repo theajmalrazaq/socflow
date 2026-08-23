@@ -50,7 +50,10 @@ export function CertificateGenerator({
       result += chars.charAt(Math.floor(Math.random() * chars.length));
     }
     const prefix =
-      getEmailConfig().brandName?.replace(/[^a-zA-Z0-9]/g, "").slice(0, 6).toUpperCase() || "CERT";
+      getEmailConfig()
+        .brandName?.replace(/[^a-zA-Z0-9]/g, "")
+        .slice(0, 6)
+        .toUpperCase() || "CERT";
     return `${prefix}-${result}`;
   };
 

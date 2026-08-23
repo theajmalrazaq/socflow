@@ -149,12 +149,7 @@ const PERMISSION_CONFIG = [
   },
 ];
 
-function PermissionForm({
-  currentMatrix,
-  matrixSetter,
-  togglePageMaster,
-  toggleSubPermission,
-}) {
+function PermissionForm({ currentMatrix, matrixSetter, togglePageMaster, toggleSubPermission }) {
   const [expanded, setExpanded] = useState({
     dashboard: true,
     events: true,

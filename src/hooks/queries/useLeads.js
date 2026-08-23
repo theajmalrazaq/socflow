@@ -54,11 +54,7 @@ export function useCreateLeadMutation() {
 
   return useMutation({
     mutationFn: async (title) => {
-      const { data, error } = await supabase
-        .from("allLeads")
-        .insert([{ title }])
-        .select()
-        .single();
+      const { data, error } = await supabase.from("allLeads").insert([{ title }]).select().single();
       if (error) throw error;
       return data;
     },
@@ -229,4 +225,3 @@ export function useDeleteLeadMemberMutation(leadId) {
     },
   });
 }
-

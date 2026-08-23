@@ -56,4 +56,3 @@ export const useUserStore = create((set) => ({
       permissionMatrix: DEFAULT_PERMISSIONS,
     }),
 }));
-

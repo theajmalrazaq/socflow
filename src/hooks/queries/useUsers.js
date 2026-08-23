@@ -68,7 +68,11 @@ export function useCreateUserMutation() {
         created_at: new Date().toISOString(),
       };
 
-      const { data, error: dbError } = await supabase.from("users").insert([payload]).select().single();
+      const { data, error: dbError } = await supabase
+        .from("users")
+        .insert([payload])
+        .select()
+        .single();
       if (dbError) throw dbError;
 
       return data;
@@ -132,4 +136,3 @@ export function useDeleteUserMutation() {
     },
   });
 }
-

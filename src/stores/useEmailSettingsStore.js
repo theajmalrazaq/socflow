@@ -74,8 +74,7 @@ export const useEmailSettingsStore = create((set) => ({
     })),
   setSmtpData: (smtpDataOrFn) =>
     set((state) => ({
-      smtpData:
-        typeof smtpDataOrFn === "function" ? smtpDataOrFn(state.smtpData) : smtpDataOrFn,
+      smtpData: typeof smtpDataOrFn === "function" ? smtpDataOrFn(state.smtpData) : smtpDataOrFn,
     })),
   setSmtpField: (field, value) =>
     set((state) => ({
@@ -84,4 +83,3 @@ export const useEmailSettingsStore = create((set) => ({
   setShowSmtpPassword: (showSmtpPassword) => set({ showSmtpPassword }),
   setTestingSmtp: (testingSmtp) => set({ testingSmtp }),
 }));
-

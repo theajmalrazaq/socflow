@@ -97,4 +97,3 @@ export const useInductionStore = create((set) => ({
   setSingleAnnouncementRecipient: (singleAnnouncementRecipient) =>
     set({ singleAnnouncementRecipient }),
 }));
-

@@ -32,7 +32,6 @@ export const useEmailStore = create((set) => ({
   setResponseToDelete: (responseToDelete) => set({ responseToDelete }),
   resetReplyModal: () => set({ responseToReply: null, replyMessage: "" }),
 
-
   composeForm: getInitialComposeForm(),
   setComposeFormField: (field, value) =>
     set((state) => ({
@@ -40,4 +39,3 @@ export const useEmailStore = create((set) => ({
     })),
   resetComposeForm: () => set({ composeForm: getInitialComposeForm() }),
 }));
-

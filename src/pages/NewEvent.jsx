@@ -379,10 +379,7 @@ export function NewEvent() {
                   Event Time *
                 </label>
                 <div className="flex gap-2">
-                  <Select
-                    value={hour}
-                    onValueChange={(val) => setEventFormField("hour", val)}
-                  >
+                  <Select value={hour} onValueChange={(val) => setEventFormField("hour", val)}>
                     <SelectTrigger className="h-11 bg-background/60">
                       <SelectValue placeholder="Hour" />
                     </SelectTrigger>
@@ -395,10 +392,7 @@ export function NewEvent() {
                     </SelectContent>
                   </Select>
 
-                  <Select
-                    value={minute}
-                    onValueChange={(val) => setEventFormField("minute", val)}
-                  >
+                  <Select value={minute} onValueChange={(val) => setEventFormField("minute", val)}>
                     <SelectTrigger className="h-11 bg-background/60">
                       <SelectValue placeholder="Min" />
                     </SelectTrigger>
@@ -411,10 +405,7 @@ export function NewEvent() {
                     </SelectContent>
                   </Select>
 
-                  <Select
-                    value={period}
-                    onValueChange={(val) => setEventFormField("period", val)}
-                  >
+                  <Select value={period} onValueChange={(val) => setEventFormField("period", val)}>
                     <SelectTrigger className="h-11 w-24 bg-background/60">
                       <SelectValue />
                     </SelectTrigger>
@@ -633,18 +624,14 @@ export function NewEvent() {
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-sm font-medium">
-                      Additional Recipients (Optional)
-                    </label>
+                    <label className="text-sm font-medium">Additional Recipients (Optional)</label>
                     <Input
                       value={customRecipients}
                       onChange={(e) => setEventFormField("customRecipients", e.target.value)}
                       placeholder="email1@example.com, email2@example.com"
                       className="h-11 bg-background/60"
                     />
-                    <p className="text-xs text-muted-foreground">
-                      Comma separated email addresses
-                    </p>
+                    <p className="text-xs text-muted-foreground">Comma separated email addresses</p>
                   </div>
 
                   {sendingProgress.total > 0 && (

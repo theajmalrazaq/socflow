@@ -4,12 +4,7 @@ import { toast } from "sonner";
 
 export const EMAILS_QUERY_KEY = ["emails"];
 
-export function useEmailsQuery({
-  page = 0,
-  limit = 10,
-  status = "all",
-  search = "",
-} = {}) {
+export function useEmailsQuery({ page = 0, limit = 10, status = "all", search = "" } = {}) {
   return useQuery({
     queryKey: [...EMAILS_QUERY_KEY, { page, limit, status, search }],
     queryFn: async () => {
@@ -93,4 +88,3 @@ export function useDeleteEmailMutation() {
     },
   });
 }
-

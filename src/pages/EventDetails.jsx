@@ -166,9 +166,7 @@ export function EventDetails() {
 
   // Granular loading states
   const updatingStatusId = updateRegMutation.isPending ? updateRegMutation.variables?.id : null;
-  const updatingAttendanceId = updateRegMutation.isPending
-    ? updateRegMutation.variables?.id
-    : null;
+  const updatingAttendanceId = updateRegMutation.isPending ? updateRegMutation.variables?.id : null;
   const deletingId = deleteRegMutation.isPending ? responseToDelete?.id : null;
 
   const eventtype = is_competition ? "competitionsResponses" : "eventsResponses";
@@ -342,7 +340,10 @@ export function EventDetails() {
       result += chars.charAt(Math.floor(Math.random() * chars.length));
     }
     const prefix =
-      getEmailConfig().brandName?.replace(/[^a-zA-Z0-9]/g, "").slice(0, 6).toUpperCase() || "CERT";
+      getEmailConfig()
+        .brandName?.replace(/[^a-zA-Z0-9]/g, "")
+        .slice(0, 6)
+        .toUpperCase() || "CERT";
     return `${prefix}-${result}`;
   };
 
@@ -481,107 +482,47 @@ export function EventDetails() {
   return (
     <>
       <div className="w-full space-y-6 px-2 py-4">
-          {/* Header Section */}
-          <div className="relative w-full flex flex-col mb-8">
-            <div
-              className="absolute top-0 left-0 w-96 h-96 rounded-full filter blur-3xl opacity-20 pointer-events-none"
-              style={{
-                backgroundImage: "linear-gradient(45deg, #2A43F8 24%, #2A43F8 50%, #4482ff 91%)",
-              }}
-            />
+        {/* Header Section */}
+        <div className="relative w-full flex flex-col mb-8">
+          <div
+            className="absolute top-0 left-0 w-96 h-96 rounded-full filter blur-3xl opacity-20 pointer-events-none"
+            style={{
+              backgroundImage: "linear-gradient(45deg, #2A43F8 24%, #2A43F8 50%, #4482ff 91%)",
+            }}
+          />
 
-            <div className="w-full relative flex items-start flex-col justify-start z-10 py-4">
-              <div className="flex items-center gap-3 mb-4">
-                <h2
-                  className="text-4xl sm:text-5xl font-extrabold text-left font-recoleta"
-                  style={{
-                    backgroundImage: "linear-gradient(45deg,#2A43F8 24%, #2A43F8 50%, #4482ff 91%)",
-                    backgroundClip: "text",
-                    WebkitBackgroundClip: "text",
-                    WebkitTextFillColor: "transparent",
-                  }}
-                >
-                  Manage Events
-                </h2>
+          <div className="w-full relative flex items-start flex-col justify-start z-10 py-4">
+            <div className="flex items-center gap-3 mb-4">
+              <h2
+                className="text-4xl sm:text-5xl font-extrabold text-left font-recoleta"
+                style={{
+                  backgroundImage: "linear-gradient(45deg,#2A43F8 24%, #2A43F8 50%, #4482ff 91%)",
+                  backgroundClip: "text",
+                  WebkitBackgroundClip: "text",
+                  WebkitTextFillColor: "transparent",
+                }}
+              >
+                Manage Events
+              </h2>
+            </div>
+            <p className="text-lg text-muted-foreground mb-6 text-left">
+              Organize, track, and manage all your events in one place
+            </p>
+
+            {}
+            <div className="w-full max-w-3xl flex flex-col gap-5 items-center">
+              <div className="relative w-full md:flex-1">
+                <Search className="absolute z-10 left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+                <Input
+                  placeholder="Search by name or roll no..."
+                  className="pl-10 h-11 bg-background/60 backdrop-blur-xl border-border/50"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
               </div>
-              <p className="text-lg text-muted-foreground mb-6 text-left">
-                Organize, track, and manage all your events in one place
-              </p>
 
-              {}
-              <div className="w-full max-w-3xl flex flex-col gap-5 items-center">
-                <div className="relative w-full md:flex-1">
-                  <Search className="absolute z-10 left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
-                  <Input
-                    placeholder="Search by name or roll no..."
-                    className="pl-10 h-11 bg-background/60 backdrop-blur-xl border-border/50"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                  />
-                </div>
-
-                <div className="flex gap-2 w-full md:w-auto items-center">
-                  {is_competition && (
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button
-                          size="lg"
-                          variant="outline"
-                          className="h-11 w-[180px] px-3 inline-flex items-center justify-between bg-background/60 backdrop-blur-xl border-border/50"
-                        >
-                          <div className="flex items-center gap-2 overflow-hidden">
-                            <CheckCircle2 className="h-4 w-4 shrink-0" />
-                            <span className="truncate">
-                              {statusFilter === "all"
-                                ? "All Status"
-                                : statusFilter === "verified"
-                                  ? "Verified"
-                                  : statusFilter === "rejected"
-                                    ? "Rejected"
-                                    : "Waiting"}
-                            </span>
-                          </div>
-                          <ChevronDown className="w-4 h-4 ml-2 shrink-0" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="start">
-                        <DropdownMenuLabel>Filter by status</DropdownMenuLabel>
-                        <DropdownMenuItem
-                          onClick={() => {
-                            setStatusFilter("all");
-                            setPage(0);
-                          }}
-                        >
-                          All Status
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() => {
-                            setStatusFilter("verified");
-                            setPage(0);
-                          }}
-                        >
-                          Verified
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() => {
-                            setStatusFilter("rejected");
-                            setPage(0);
-                          }}
-                        >
-                          Rejected
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() => {
-                            setStatusFilter("waiting");
-                            setPage(0);
-                          }}
-                        >
-                          Waiting
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  )}
-
+              <div className="flex gap-2 w-full md:w-auto items-center">
+                {is_competition && (
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button
@@ -590,14 +531,14 @@ export function EventDetails() {
                         className="h-11 w-[180px] px-3 inline-flex items-center justify-between bg-background/60 backdrop-blur-xl border-border/50"
                       >
                         <div className="flex items-center gap-2 overflow-hidden">
-                          <UserCheck className="h-4 w-4 shrink-0" />
+                          <CheckCircle2 className="h-4 w-4 shrink-0" />
                           <span className="truncate">
-                            {attendanceFilter === "all"
-                              ? "All Attendance"
-                              : attendanceFilter === "present"
-                                ? "Present"
-                                : attendanceFilter === "absent"
-                                  ? "Absent"
+                            {statusFilter === "all"
+                              ? "All Status"
+                              : statusFilter === "verified"
+                                ? "Verified"
+                                : statusFilter === "rejected"
+                                  ? "Rejected"
                                   : "Waiting"}
                           </span>
                         </div>
@@ -605,34 +546,34 @@ export function EventDetails() {
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="start">
-                      <DropdownMenuLabel>Filter by attendance</DropdownMenuLabel>
+                      <DropdownMenuLabel>Filter by status</DropdownMenuLabel>
                       <DropdownMenuItem
                         onClick={() => {
-                          setAttendanceFilter("all");
+                          setStatusFilter("all");
                           setPage(0);
                         }}
                       >
-                        All
+                        All Status
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         onClick={() => {
-                          setAttendanceFilter("present");
+                          setStatusFilter("verified");
                           setPage(0);
                         }}
                       >
-                        Present
+                        Verified
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         onClick={() => {
-                          setAttendanceFilter("absent");
+                          setStatusFilter("rejected");
                           setPage(0);
                         }}
                       >
-                        Absent
+                        Rejected
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         onClick={() => {
-                          setAttendanceFilter("waiting");
+                          setStatusFilter("waiting");
                           setPage(0);
                         }}
                       >
@@ -640,664 +581,717 @@ export function EventDetails() {
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
+                )}
 
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button
-                        size="lg"
-                        variant="outline"
-                        className="h-11 gap-2 flex-1 md:flex-none"
-                      >
-                        <FileDown className="h-4 w-4" />
-                        Export
-                        <ChevronDown className="w-4 h-4 ml-2" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuLabel>Export As</DropdownMenuLabel>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem onClick={() => handleExportCSV("all")}>
-                        <FileDown className="w-4 mr-2" />
-                        CSV (All)
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => handleExportVCF("all")}>
-                        <FileDown className="w-4 mr-2" />
-                        VCF (All)
-                      </DropdownMenuItem>
-                      {is_competition && (
-                        <>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem onClick={() => handleExportCSV("Verified")}>
-                            <FileDown className="w-4 mr-2" />
-                            CSV (Verified)
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => handleExportVCF("Verified")}>
-                            <FileDown className="w-4 mr-2" />
-                            VCF (Verified)
-                          </DropdownMenuItem>
-                        </>
-                      )}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      size="lg"
+                      variant="outline"
+                      className="h-11 w-[180px] px-3 inline-flex items-center justify-between bg-background/60 backdrop-blur-xl border-border/50"
+                    >
+                      <div className="flex items-center gap-2 overflow-hidden">
+                        <UserCheck className="h-4 w-4 shrink-0" />
+                        <span className="truncate">
+                          {attendanceFilter === "all"
+                            ? "All Attendance"
+                            : attendanceFilter === "present"
+                              ? "Present"
+                              : attendanceFilter === "absent"
+                                ? "Absent"
+                                : "Waiting"}
+                        </span>
+                      </div>
+                      <ChevronDown className="w-4 h-4 ml-2 shrink-0" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="start">
+                    <DropdownMenuLabel>Filter by attendance</DropdownMenuLabel>
+                    <DropdownMenuItem
+                      onClick={() => {
+                        setAttendanceFilter("all");
+                        setPage(0);
+                      }}
+                    >
+                      All
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => {
+                        setAttendanceFilter("present");
+                        setPage(0);
+                      }}
+                    >
+                      Present
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => {
+                        setAttendanceFilter("absent");
+                        setPage(0);
+                      }}
+                    >
+                      Absent
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => {
+                        setAttendanceFilter("waiting");
+                        setPage(0);
+                      }}
+                    >
+                      Waiting
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
 
-                  <CertificateGenerator
-                    eventId={event_id}
-                    eventName={eventName}
-                    eventDate={location.state?.date || new Date()}
-                    responses={previousResponses}
-                    isCompetition={is_competition}
-                    winners={winners}
-                  />
-                </div>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button size="lg" variant="outline" className="h-11 gap-2 flex-1 md:flex-none">
+                      <FileDown className="h-4 w-4" />
+                      Export
+                      <ChevronDown className="w-4 h-4 ml-2" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuLabel>Export As</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={() => handleExportCSV("all")}>
+                      <FileDown className="w-4 mr-2" />
+                      CSV (All)
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => handleExportVCF("all")}>
+                      <FileDown className="w-4 mr-2" />
+                      VCF (All)
+                    </DropdownMenuItem>
+                    {is_competition && (
+                      <>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem onClick={() => handleExportCSV("Verified")}>
+                          <FileDown className="w-4 mr-2" />
+                          CSV (Verified)
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleExportVCF("Verified")}>
+                          <FileDown className="w-4 mr-2" />
+                          VCF (Verified)
+                        </DropdownMenuItem>
+                      </>
+                    )}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+
+                <CertificateGenerator
+                  eventId={event_id}
+                  eventName={eventName}
+                  eventDate={location.state?.date || new Date()}
+                  responses={previousResponses}
+                  isCompetition={is_competition}
+                  winners={winners}
+                />
               </div>
             </div>
           </div>
+        </div>
 
-          <Tabs defaultValue="registrations" className="space-y-4">
-            <TabsList className="bg-background/60 border border-border/50 backdrop-blur-xl">
-              <TabsTrigger value="registrations">Registrations</TabsTrigger>
-              {is_competition && <TabsTrigger value="winners">Winners</TabsTrigger>}
-            </TabsList>
+        <Tabs defaultValue="registrations" className="space-y-4">
+          <TabsList className="bg-background/60 border border-border/50 backdrop-blur-xl">
+            <TabsTrigger value="registrations">Registrations</TabsTrigger>
+            {is_competition && <TabsTrigger value="winners">Winners</TabsTrigger>}
+          </TabsList>
 
-            <TabsContent value="registrations" className="space-y-4">
-              {}
+          <TabsContent value="registrations" className="space-y-4">
+            {}
 
-              {}
-              <Card className="rounded-2xl bg-background/60 border border-border/50 backdrop-blur-xl w-full">
-                <CardContent className="p-0">
-                  {loading ? (
-                    <div className="flex items-center justify-center h-96">
-                      <Loading />
-                    </div>
-                  ) : (
-                    <div>
-                      {filteredResponses.length > 0 ? (
-                        <ul className="divide-y divide-border/50">
-                          {filteredResponses.map((response, idx) => (
-                            <li
-                              key={response.id}
-                              className="p-6 flex items-start gap-6 md:gap-8 group hover:bg-background/40 transition-colors"
-                            >
-                              {}
-                              <div className="shrink-0">
-                                <div className="w-14 h-14 rounded-full bg-white/95 text-black flex items-center justify-center font-bold text-xl border border-border/30">
-                                  {response.date ? new Date(response.date).getDate() : idx + 1}
-                                </div>
+            {}
+            <Card className="rounded-2xl bg-background/60 border border-border/50 backdrop-blur-xl w-full">
+              <CardContent className="p-0">
+                {loading ? (
+                  <div className="flex items-center justify-center h-96">
+                    <Loading />
+                  </div>
+                ) : (
+                  <div>
+                    {filteredResponses.length > 0 ? (
+                      <ul className="divide-y divide-border/50">
+                        {filteredResponses.map((response, idx) => (
+                          <li
+                            key={response.id}
+                            className="p-6 flex items-start gap-6 md:gap-8 group hover:bg-background/40 transition-colors"
+                          >
+                            {}
+                            <div className="shrink-0">
+                              <div className="w-14 h-14 rounded-full bg-white/95 text-black flex items-center justify-center font-bold text-xl border border-border/30">
+                                {response.date ? new Date(response.date).getDate() : idx + 1}
                               </div>
+                            </div>
 
-                              {}
-                              <div className="flex-1 min-w-0">
-                                <div className="flex items-center gap-3 flex-wrap mb-2">
-                                  <h3 className="font-semibold text-lg md:text-xl line-clamp-1 text-foreground">
-                                    {is_competition ? response.team_name : response.name}
-                                  </h3>
+                            {}
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-3 flex-wrap mb-2">
+                                <h3 className="font-semibold text-lg md:text-xl line-clamp-1 text-foreground">
+                                  {is_competition ? response.team_name : response.name}
+                                </h3>
 
-                                  {}
-                                  <div className="flex items-center gap-2">
-                                    {is_competition && (
-                                      <Badge
-                                        className={`${
-                                          response.status === null
-                                            ? "bg-orange-500"
-                                            : response.status === true
-                                              ? "bg-green-600"
-                                              : "bg-red-600"
-                                        } text-white border-none`}
-                                      >
-                                        {response.status === null
-                                          ? "Waiting"
-                                          : response.status === true
-                                            ? "Verified"
-                                            : "Rejected"}
-                                      </Badge>
-                                    )}
-
+                                {}
+                                <div className="flex items-center gap-2">
+                                  {is_competition && (
                                     <Badge
                                       className={`${
-                                        getAttendance(response) === null
+                                        response.status === null
                                           ? "bg-orange-500"
-                                          : getAttendance(response) === true
+                                          : response.status === true
                                             ? "bg-green-600"
                                             : "bg-red-600"
                                       } text-white border-none`}
                                     >
-                                      {getAttendance(response) === null
+                                      {response.status === null
                                         ? "Waiting"
-                                        : getAttendance(response) === true
-                                          ? "Present"
-                                          : "Absent"}
+                                        : response.status === true
+                                          ? "Verified"
+                                          : "Rejected"}
                                     </Badge>
-                                  </div>
+                                  )}
+
+                                  <Badge
+                                    className={`${
+                                      getAttendance(response) === null
+                                        ? "bg-orange-500"
+                                        : getAttendance(response) === true
+                                          ? "bg-green-600"
+                                          : "bg-red-600"
+                                    } text-white border-none`}
+                                  >
+                                    {getAttendance(response) === null
+                                      ? "Waiting"
+                                      : getAttendance(response) === true
+                                        ? "Present"
+                                        : "Absent"}
+                                  </Badge>
                                 </div>
+                              </div>
 
-                                {}
-                                <div className="text-sm text-muted-foreground space-y-3">
-                                  {is_competition ? (
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                      <div className="space-y-1">
-                                        <div className="text-xs font-medium text-foreground/80 uppercase tracking-wider">
-                                          Member 1
-                                        </div>
-                                        <div className="flex items-center gap-2">
-                                          <Users className="w-3.5 h-3.5 text-primary" />
-                                          <span className="font-medium text-foreground">
-                                            {response.member_one_name || "-"}
-                                          </span>
-                                        </div>
-                                        <div className="flex items-center gap-2">
-                                          <GraduationCap className="w-3.5 h-3.5 text-primary" />
-                                          <span>{response.member_one_rollno || "-"}</span>
-                                        </div>
-                                        <div className="flex items-center gap-2">
-                                          <Mail className="w-3.5 h-3.5 text-primary" />
-                                          <span className="truncate">
-                                            {response.member_one_numail || "-"}
-                                          </span>
-                                        </div>
+                              {}
+                              <div className="text-sm text-muted-foreground space-y-3">
+                                {is_competition ? (
+                                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <div className="space-y-1">
+                                      <div className="text-xs font-medium text-foreground/80 uppercase tracking-wider">
+                                        Member 1
                                       </div>
-
-                                      <div className="space-y-1">
-                                        <div className="text-xs font-medium text-foreground/80 uppercase tracking-wider">
-                                          Member 2
-                                        </div>
-                                        <div className="flex items-center gap-2">
-                                          <Users className="w-3.5 h-3.5 text-primary" />
-                                          <span className="font-medium text-foreground">
-                                            {response.member_two_name || "-"}
-                                          </span>
-                                        </div>
-                                        <div className="flex items-center gap-2">
-                                          <GraduationCap className="w-3.5 h-3.5 text-primary" />
-                                          <span>{response.member_two_rollno || "-"}</span>
-                                        </div>
-                                        <div className="flex items-center gap-2">
-                                          <Mail className="w-3.5 h-3.5 text-primary" />
-                                          <span className="truncate">
-                                            {response.member_two_numail || "-"}
-                                          </span>
-                                        </div>
+                                      <div className="flex items-center gap-2">
+                                        <Users className="w-3.5 h-3.5 text-primary" />
+                                        <span className="font-medium text-foreground">
+                                          {response.member_one_name || "-"}
+                                        </span>
                                       </div>
-                                    </div>
-                                  ) : (
-                                    <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
                                       <div className="flex items-center gap-2">
                                         <GraduationCap className="w-3.5 h-3.5 text-primary" />
-                                        <span>{response.roll_no || "-"}</span>
+                                        <span>{response.member_one_rollno || "-"}</span>
                                       </div>
                                       <div className="flex items-center gap-2">
                                         <Mail className="w-3.5 h-3.5 text-primary" />
-                                        <span className="truncate">{response.nu_email || "-"}</span>
-                                      </div>
-                                      <div className="flex items-center gap-2">
-                                        <Phone className="w-3.5 h-3.5 text-primary" />
-                                        <span>{response.whatsapp_no || "-"}</span>
+                                        <span className="truncate">
+                                          {response.member_one_numail || "-"}
+                                        </span>
                                       </div>
                                     </div>
-                                  )}
-                                </div>
 
-                                {}
-                                <div className="mt-4 flex flex-wrap items-center gap-2">
-                                  {is_competition && (
-                                    <DropdownMenu>
-                                      <DropdownMenuTrigger asChild>
-                                        <Button variant="outline" size="sm">
-                                          {response.status === true
-                                            ? "Verified"
-                                            : response.status === false
-                                              ? "Rejected"
-                                              : "Status"}
-                                          <ChevronDown className="w-3.5 h-3.5 ml-2" />
-                                        </Button>
-                                      </DropdownMenuTrigger>
-                                      <DropdownMenuContent>
-                                        <DropdownMenuLabel>Change Status</DropdownMenuLabel>
-                                        <DropdownMenuItem
-                                          onClick={(e) => {
-                                            e.preventDefault();
-                                            updateResponseStatus(response, true);
-                                          }}
-                                        >
-                                          {updatingStatusId === response.id &&
-                                          updatingStatusValue === true ? (
-                                            <span className="flex items-center">
-                                              <Loader className="mr-2 h-4 w-4 animate-spin" />
-                                              Updating...
-                                            </span>
-                                          ) : (
-                                            <>
-                                              <Check className="mr-2 w-4 h-4" /> Verify
-                                            </>
-                                          )}
-                                        </DropdownMenuItem>
-                                        <DropdownMenuItem
-                                          onClick={(e) => {
-                                            e.preventDefault();
-                                            updateResponseStatus(response, false);
-                                          }}
-                                        >
-                                          {updatingStatusId === response.id &&
-                                          updatingStatusValue === false ? (
-                                            <span className="flex items-center">
-                                              <Loader className="mr-2 h-4 w-4 animate-spin" />
-                                              Updating...
-                                            </span>
-                                          ) : (
-                                            <>
-                                              <X className="mr-2 w-4 h-4" /> Reject
-                                            </>
-                                          )}
-                                        </DropdownMenuItem>
-                                      </DropdownMenuContent>
-                                    </DropdownMenu>
-                                  )}
+                                    <div className="space-y-1">
+                                      <div className="text-xs font-medium text-foreground/80 uppercase tracking-wider">
+                                        Member 2
+                                      </div>
+                                      <div className="flex items-center gap-2">
+                                        <Users className="w-3.5 h-3.5 text-primary" />
+                                        <span className="font-medium text-foreground">
+                                          {response.member_two_name || "-"}
+                                        </span>
+                                      </div>
+                                      <div className="flex items-center gap-2">
+                                        <GraduationCap className="w-3.5 h-3.5 text-primary" />
+                                        <span>{response.member_two_rollno || "-"}</span>
+                                      </div>
+                                      <div className="flex items-center gap-2">
+                                        <Mail className="w-3.5 h-3.5 text-primary" />
+                                        <span className="truncate">
+                                          {response.member_two_numail || "-"}
+                                        </span>
+                                      </div>
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
+                                    <div className="flex items-center gap-2">
+                                      <GraduationCap className="w-3.5 h-3.5 text-primary" />
+                                      <span>{response.roll_no || "-"}</span>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                      <Mail className="w-3.5 h-3.5 text-primary" />
+                                      <span className="truncate">{response.nu_email || "-"}</span>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                      <Phone className="w-3.5 h-3.5 text-primary" />
+                                      <span>{response.whatsapp_no || "-"}</span>
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
 
-                                  <DropdownMenu>
-                                    <DropdownMenuTrigger asChild>
-                                      <Button
-                                        variant="outline"
-                                        size="sm"
-                                        disabled={updatingAttendanceId === response.id}
-                                      >
-                                        {getAttendance(response) === true
-                                          ? "Present"
-                                          : getAttendance(response) === false
-                                            ? "Absent"
-                                            : "Attendance"}
-                                        <ChevronDown className="w-3.5 h-3.5 ml-2" />
-                                      </Button>
-                                    </DropdownMenuTrigger>
-                                    <DropdownMenuContent>
-                                      <DropdownMenuLabel>Mark Attendance</DropdownMenuLabel>
-                                      <DropdownMenuItem
-                                        onClick={(e) => {
-                                          e.preventDefault();
-                                          updateAttendance(response, true);
-                                        }}
-                                      >
-                                        {updatingAttendanceId === response.id &&
-                                        updatingAttendanceValue === true ? (
-                                          <span className="flex items-center">
-                                            <Loader className="mr-2 h-4 w-4 animate-spin" />
-                                            Updating...
-                                          </span>
-                                        ) : (
-                                          <>
-                                            <Check className="mr-2 w-4 h-4" /> Present
-                                          </>
-                                        )}
-                                      </DropdownMenuItem>
-                                      <DropdownMenuItem
-                                        onClick={(e) => {
-                                          e.preventDefault();
-                                          updateAttendance(response, false);
-                                        }}
-                                      >
-                                        {updatingAttendanceId === response.id &&
-                                        updatingAttendanceValue === false ? (
-                                          <span className="flex items-center">
-                                            <Loader className="mr-2 h-4 w-4 animate-spin" />
-                                            Updating...
-                                          </span>
-                                        ) : (
-                                          <>
-                                            <X className="mr-2 w-4 h-4" /> Absent
-                                          </>
-                                        )}
-                                      </DropdownMenuItem>
-                                    </DropdownMenuContent>
-                                  </DropdownMenu>
-
+                              {}
+                              <div className="mt-4 flex flex-wrap items-center gap-2">
+                                {is_competition && (
                                   <DropdownMenu>
                                     <DropdownMenuTrigger asChild>
                                       <Button variant="outline" size="sm">
-                                        Contact
+                                        {response.status === true
+                                          ? "Verified"
+                                          : response.status === false
+                                            ? "Rejected"
+                                            : "Status"}
                                         <ChevronDown className="w-3.5 h-3.5 ml-2" />
                                       </Button>
                                     </DropdownMenuTrigger>
                                     <DropdownMenuContent>
-                                      <DropdownMenuLabel>Contact</DropdownMenuLabel>
+                                      <DropdownMenuLabel>Change Status</DropdownMenuLabel>
                                       <DropdownMenuItem
-                                        onClick={() => handleSendWhatsApp(response.whatsapp_no)}
+                                        onClick={(e) => {
+                                          e.preventDefault();
+                                          updateResponseStatus(response, true);
+                                        }}
                                       >
-                                        <MessageCircle className="mr-2 w-4 h-4" />
-                                        Message
-                                      </DropdownMenuItem>
-                                      <DropdownMenuItem
-                                        onClick={() => handleSendEmail(response.nu_email)}
-                                      >
-                                        <Mail className="mr-2 w-4 h-4" />
-                                        Email
+                                        {updatingStatusId === response.id &&
+                                        updatingStatusValue === true ? (
+                                          <span className="flex items-center">
+                                            <Loader className="mr-2 h-4 w-4 animate-spin" />
+                                            Updating...
+                                          </span>
+                                        ) : (
+                                          <>
+                                            <Check className="mr-2 w-4 h-4" /> Verify
+                                          </>
+                                        )}
                                       </DropdownMenuItem>
                                       <DropdownMenuItem
                                         onClick={(e) => {
                                           e.preventDefault();
-                                          handleSendCertificate(response);
+                                          updateResponseStatus(response, false);
                                         }}
                                       >
-                                        {processingEmailId === response.id ? (
+                                        {updatingStatusId === response.id &&
+                                        updatingStatusValue === false ? (
                                           <span className="flex items-center">
                                             <Loader className="mr-2 h-4 w-4 animate-spin" />
-                                            Sending...
+                                            Updating...
                                           </span>
                                         ) : (
                                           <>
-                                            <Award className="mr-2 w-4 h-4" />
-                                            Send Certificate
+                                            <X className="mr-2 w-4 h-4" /> Reject
                                           </>
                                         )}
                                       </DropdownMenuItem>
                                     </DropdownMenuContent>
                                   </DropdownMenu>
+                                )}
 
-                                  {response.link && (
+                                <DropdownMenu>
+                                  <DropdownMenuTrigger asChild>
                                     <Button
                                       variant="outline"
                                       size="sm"
-                                      onClick={() => window.open(response.link)}
+                                      disabled={updatingAttendanceId === response.id}
                                     >
-                                      <Eye className="w-3.5 h-3.5 mr-1" />
-                                      View Link
+                                      {getAttendance(response) === true
+                                        ? "Present"
+                                        : getAttendance(response) === false
+                                          ? "Absent"
+                                          : "Attendance"}
+                                      <ChevronDown className="w-3.5 h-3.5 ml-2" />
                                     </Button>
-                                  )}
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent>
+                                    <DropdownMenuLabel>Mark Attendance</DropdownMenuLabel>
+                                    <DropdownMenuItem
+                                      onClick={(e) => {
+                                        e.preventDefault();
+                                        updateAttendance(response, true);
+                                      }}
+                                    >
+                                      {updatingAttendanceId === response.id &&
+                                      updatingAttendanceValue === true ? (
+                                        <span className="flex items-center">
+                                          <Loader className="mr-2 h-4 w-4 animate-spin" />
+                                          Updating...
+                                        </span>
+                                      ) : (
+                                        <>
+                                          <Check className="mr-2 w-4 h-4" /> Present
+                                        </>
+                                      )}
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem
+                                      onClick={(e) => {
+                                        e.preventDefault();
+                                        updateAttendance(response, false);
+                                      }}
+                                    >
+                                      {updatingAttendanceId === response.id &&
+                                      updatingAttendanceValue === false ? (
+                                        <span className="flex items-center">
+                                          <Loader className="mr-2 h-4 w-4 animate-spin" />
+                                          Updating...
+                                        </span>
+                                      ) : (
+                                        <>
+                                          <X className="mr-2 w-4 h-4" /> Absent
+                                        </>
+                                      )}
+                                    </DropdownMenuItem>
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
 
-                                  {hasPermission(permissions, "events", "deleteEvent") && (
-                                    <Button
-                                      variant="outline"
-                                      size="sm"
-                                      className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                                      onClick={() => setResponseToDelete(response)}
-                                    >
-                                      <Trash2 className="w-3.5 h-3.5 mr-1" />
-                                      Delete
+                                <DropdownMenu>
+                                  <DropdownMenuTrigger asChild>
+                                    <Button variant="outline" size="sm">
+                                      Contact
+                                      <ChevronDown className="w-3.5 h-3.5 ml-2" />
                                     </Button>
-                                  )}
-                                </div>
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent>
+                                    <DropdownMenuLabel>Contact</DropdownMenuLabel>
+                                    <DropdownMenuItem
+                                      onClick={() => handleSendWhatsApp(response.whatsapp_no)}
+                                    >
+                                      <MessageCircle className="mr-2 w-4 h-4" />
+                                      Message
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem
+                                      onClick={() => handleSendEmail(response.nu_email)}
+                                    >
+                                      <Mail className="mr-2 w-4 h-4" />
+                                      Email
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem
+                                      onClick={(e) => {
+                                        e.preventDefault();
+                                        handleSendCertificate(response);
+                                      }}
+                                    >
+                                      {processingEmailId === response.id ? (
+                                        <span className="flex items-center">
+                                          <Loader className="mr-2 h-4 w-4 animate-spin" />
+                                          Sending...
+                                        </span>
+                                      ) : (
+                                        <>
+                                          <Award className="mr-2 w-4 h-4" />
+                                          Send Certificate
+                                        </>
+                                      )}
+                                    </DropdownMenuItem>
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
+
+                                {response.link && (
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => window.open(response.link)}
+                                  >
+                                    <Eye className="w-3.5 h-3.5 mr-1" />
+                                    View Link
+                                  </Button>
+                                )}
+
+                                {hasPermission(permissions, "events", "deleteEvent") && (
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                                    onClick={() => setResponseToDelete(response)}
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5 mr-1" />
+                                    Delete
+                                  </Button>
+                                )}
                               </div>
-                            </li>
-                          ))}
-                        </ul>
-                      ) : (
-                        <div className="p-8 text-center text-muted-foreground">
-                          {error ? "Error loading registrations" : "No registrations found"}
-                        </div>
-                      )}
+                            </div>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <div className="p-8 text-center text-muted-foreground">
+                        {error ? "Error loading registrations" : "No registrations found"}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {filteredResponses.length > 0 && (
+              <div className="fixed bottom-6 right-8 z-30 pointer-events-auto">
+                <div className="inline-flex items-center gap-3 rounded-full bg-background/85 backdrop-blur-2xl border border-border/80 px-4 py-2.5 shadow-xl text-xs text-muted-foreground transition-all duration-200 hover:shadow-2xl">
+                  <span>
+                    Showing{" "}
+                    <strong className="text-foreground font-semibold">
+                      {page * responsesPerPage + 1} -{" "}
+                      {Math.min((page + 1) * responsesPerPage, totalResponses)}
+                    </strong>{" "}
+                    of <strong className="text-foreground font-semibold">{totalResponses}</strong>{" "}
+                    results
+                  </span>
+                  <div className="flex items-center gap-1 border-l border-border/60 pl-3">
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="size-7 rounded-full hover:bg-accent"
+                      onClick={handlePreviousPage}
+                      disabled={page === 0}
+                    >
+                      <ChevronLeft className="size-3.5" />
+                      <span className="sr-only">Previous</span>
+                    </Button>
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="size-7 rounded-full hover:bg-accent"
+                      onClick={handleNextPage}
+                      disabled={(page + 1) * responsesPerPage >= totalResponses}
+                    >
+                      <ChevronRight className="size-3.5" />
+                      <span className="sr-only">Next</span>
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </TabsContent>
+
+          {is_competition && (
+            <TabsContent value="winners" className="space-y-4">
+              <Card className="bg-background/60 border border-border/50 backdrop-blur-xl">
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <CardTitle>Competition Winners</CardTitle>
+                      <CardDescription>Manage and display competition winners</CardDescription>
+                    </div>
+                    <Button onClick={() => setIsWinnerDialogOpen(true)}>
+                      <Trophy className="h-4 w-4 mr-2" />
+                      Add Winner
+                    </Button>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  {winners.length > 0 ? (
+                    <div className="grid gap-4 md:grid-cols-3">
+                      {winners
+                        .sort((a, b) => a.position - b.position)
+                        .map((winner) => {
+                          const response = filteredResponses.find(
+                            (r) => r.id === winner.response_id,
+                          );
+                          return (
+                            <Card
+                              key={winner.id}
+                              className="overflow-hidden bg-background/60 backdrop-blur-xl border-border/50"
+                            >
+                              <CardHeader className="p-4 border-b border-border/50">
+                                <div className="flex items-center justify-between">
+                                  <div className="flex items-center gap-2">
+                                    {getPositionIcon(winner.position)}
+                                    <CardTitle className="text-lg">
+                                      Position {winner.position}
+                                    </CardTitle>
+                                  </div>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-8 w-8 text-muted-foreground hover:text-red-600"
+                                    onClick={() => removeWinner(winner.id)}
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                </div>
+                              </CardHeader>
+                              <CardContent className="p-4">
+                                {winner.img_url && (
+                                  <img
+                                    src={winner.img_url}
+                                    alt={`Winner ${winner.position}`}
+                                    className="w-full h-48 object-cover rounded-md mb-4"
+                                  />
+                                )}
+                                <div className="space-y-2">
+                                  <p className="font-semibold text-lg">
+                                    {response?.team_name || "Team Name"}
+                                  </p>
+                                  <div className="text-sm text-muted-foreground space-y-1">
+                                    <p>Member 1: {response?.member_one_name || "N/A"}</p>
+                                    <p>Member 2: {response?.member_two_name || "N/A"}</p>
+                                  </div>
+                                </div>
+                              </CardContent>
+                            </Card>
+                          );
+                        })}
+                    </div>
+                  ) : (
+                    <div className="text-center py-12">
+                      <Trophy className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                      <h3 className="text-lg font-semibold mb-2">No Winners Yet</h3>
+                      <p className="text-muted-foreground mb-4">
+                        Add winners to showcase competition results
+                      </p>
+                      <Button onClick={() => setIsWinnerDialogOpen(true)}>
+                        <Trophy className="h-4 w-4 mr-2" />
+                        Add First Winner
+                      </Button>
                     </div>
                   )}
                 </CardContent>
               </Card>
-
-              {filteredResponses.length > 0 && (
-                <div className="fixed bottom-6 right-8 z-30 pointer-events-auto">
-                  <div className="inline-flex items-center gap-3 rounded-full bg-background/85 backdrop-blur-2xl border border-border/80 px-4 py-2.5 shadow-xl text-xs text-muted-foreground transition-all duration-200 hover:shadow-2xl">
-                    <span>
-                      Showing{" "}
-                      <strong className="text-foreground font-semibold">
-                        {page * responsesPerPage + 1} -{" "}
-                        {Math.min((page + 1) * responsesPerPage, totalResponses)}
-                      </strong>{" "}
-                      of <strong className="text-foreground font-semibold">{totalResponses}</strong>{" "}
-                      results
-                    </span>
-                    <div className="flex items-center gap-1 border-l border-border/60 pl-3">
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        className="size-7 rounded-full hover:bg-accent"
-                        onClick={handlePreviousPage}
-                        disabled={page === 0}
-                      >
-                        <ChevronLeft className="size-3.5" />
-                        <span className="sr-only">Previous</span>
-                      </Button>
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        className="size-7 rounded-full hover:bg-accent"
-                        onClick={handleNextPage}
-                        disabled={(page + 1) * responsesPerPage >= totalResponses}
-                      >
-                        <ChevronRight className="size-3.5" />
-                        <span className="sr-only">Next</span>
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              )}
             </TabsContent>
+          )}
+        </Tabs>
 
-            {is_competition && (
-              <TabsContent value="winners" className="space-y-4">
-                <Card className="bg-background/60 border border-border/50 backdrop-blur-xl">
-                  <CardHeader>
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <CardTitle>Competition Winners</CardTitle>
-                        <CardDescription>Manage and display competition winners</CardDescription>
-                      </div>
-                      <Button onClick={() => setIsWinnerDialogOpen(true)}>
-                        <Trophy className="h-4 w-4 mr-2" />
-                        Add Winner
-                      </Button>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    {winners.length > 0 ? (
-                      <div className="grid gap-4 md:grid-cols-3">
-                        {winners
-                          .sort((a, b) => a.position - b.position)
-                          .map((winner) => {
-                            const response = filteredResponses.find(
-                              (r) => r.id === winner.response_id,
-                            );
-                            return (
-                              <Card
-                                key={winner.id}
-                                className="overflow-hidden bg-background/60 backdrop-blur-xl border-border/50"
-                              >
-                                <CardHeader className="p-4 border-b border-border/50">
-                                  <div className="flex items-center justify-between">
-                                    <div className="flex items-center gap-2">
-                                      {getPositionIcon(winner.position)}
-                                      <CardTitle className="text-lg">
-                                        Position {winner.position}
-                                      </CardTitle>
-                                    </div>
-                                    <Button
-                                      variant="ghost"
-                                      size="icon"
-                                      className="h-8 w-8 text-muted-foreground hover:text-red-600"
-                                      onClick={() => removeWinner(winner.id)}
-                                    >
-                                      <Trash2 className="h-4 w-4" />
-                                    </Button>
-                                  </div>
-                                </CardHeader>
-                                <CardContent className="p-4">
-                                  {winner.img_url && (
-                                    <img
-                                      src={winner.img_url}
-                                      alt={`Winner ${winner.position}`}
-                                      className="w-full h-48 object-cover rounded-md mb-4"
-                                    />
-                                  )}
-                                  <div className="space-y-2">
-                                    <p className="font-semibold text-lg">
-                                      {response?.team_name || "Team Name"}
-                                    </p>
-                                    <div className="text-sm text-muted-foreground space-y-1">
-                                      <p>Member 1: {response?.member_one_name || "N/A"}</p>
-                                      <p>Member 2: {response?.member_two_name || "N/A"}</p>
-                                    </div>
-                                  </div>
-                                </CardContent>
-                              </Card>
-                            );
-                          })}
-                      </div>
-                    ) : (
-                      <div className="text-center py-12">
-                        <Trophy className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                        <h3 className="text-lg font-semibold mb-2">No Winners Yet</h3>
-                        <p className="text-muted-foreground mb-4">
-                          Add winners to showcase competition results
-                        </p>
-                        <Button onClick={() => setIsWinnerDialogOpen(true)}>
-                          <Trophy className="h-4 w-4 mr-2" />
-                          Add First Winner
-                        </Button>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              </TabsContent>
-            )}
-          </Tabs>
+        <AlertDialog
+          open={!!responseToDelete}
+          onOpenChange={(open) => !open && setResponseToDelete(null)}
+        >
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Confirm Deletion</AlertDialogTitle>
+              <AlertDialogDescription>
+                This action cannot be undone. This will permanently delete the registration.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={deleteResponse}
+                disabled={deletingId === responseToDelete?.id}
+                className="bg-red-600 hover:bg-red-700"
+              >
+                {deletingId === responseToDelete?.id ? (
+                  <span className="flex items-center">
+                    <Loader className="mr-2 h-4 w-4 animate-spin" />
+                    Deleting...
+                  </span>
+                ) : (
+                  "Delete"
+                )}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
 
-          <AlertDialog
-            open={!!responseToDelete}
-            onOpenChange={(open) => !open && setResponseToDelete(null)}
-          >
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Confirm Deletion</AlertDialogTitle>
-                <AlertDialogDescription>
-                  This action cannot be undone. This will permanently delete the registration.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction
-                  onClick={deleteResponse}
-                  disabled={deletingId === responseToDelete?.id}
-                  className="bg-red-600 hover:bg-red-700"
-                >
-                  {deletingId === responseToDelete?.id ? (
-                    <span className="flex items-center">
-                      <Loader className="mr-2 h-4 w-4 animate-spin" />
-                      Deleting...
-                    </span>
-                  ) : (
-                    "Delete"
-                  )}
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
-
-          {is_competition && (
-            <Dialog open={isWinnerDialogOpen} onOpenChange={setIsWinnerDialogOpen}>
-              <DialogContent className="sm:max-w-[500px]">
-                <DialogHeader>
-                  <DialogTitle>Add Competition Winner</DialogTitle>
-                  <DialogDescription>
-                    Select a team and position to add as a winner
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="space-y-4 py-4">
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Select Team</label>
-                    <Select
-                      value={selectedWinner?.id?.toString()}
-                      onValueChange={(value) => {
-                        const winner = filteredResponses.find((r) => r.id.toString() === value);
-                        setSelectedWinner(winner);
-                      }}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Choose a team..." />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {filteredResponses
-                          .filter(
-                            (r) =>
-                              r.status === true && !winners.some((w) => w.response_id === r.id),
-                          )
-                          .map((response) => (
-                            <SelectItem key={response.id} value={response.id.toString()}>
-                              {response.team_name} - {response.member_one_name}
-                            </SelectItem>
-                          ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Position</label>
-                    <Select
-                      value={winnerPosition?.toString()}
-                      onValueChange={(value) => setWinnerPosition(parseInt(value))}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select position..." />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="1">
-                          <div className="flex items-center gap-2">
-                            <Trophy className="h-4 w-4 text-yellow-500" />
-                            1st Place
-                          </div>
-                        </SelectItem>
-                        <SelectItem value="2">
-                          <div className="flex items-center gap-2">
-                            <Medal className="h-4 w-4 text-gray-400" />
-                            2nd Place
-                          </div>
-                        </SelectItem>
-                        <SelectItem value="3">
-                          <div className="flex items-center gap-2">
-                            <Award className="h-4 w-4 text-amber-700" />
-                            3rd Place
-                          </div>
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Image URL (Optional)</label>
-                    <Input
-                      placeholder="https://example.com/image.jpg"
-                      value={winnerImageUrl}
-                      onChange={(e) => setWinnerImageUrl(e.target.value)}
-                    />
-                  </div>
-
-                  {selectedWinner && (
-                    <Card className="bg-muted/50">
-                      <CardContent className="pt-4">
-                        <p className="text-sm font-medium mb-2">Selected Team:</p>
-                        <div className="text-sm space-y-1">
-                          <p className="font-semibold">{selectedWinner.team_name}</p>
-                          <p className="text-muted-foreground">
-                            {selectedWinner.member_one_name} & {selectedWinner.member_two_name}
-                          </p>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  )}
-                </div>
-                <DialogFooter>
-                  <Button
-                    variant="outline"
-                    onClick={() => {
-                      setIsWinnerDialogOpen(false);
-                      setSelectedWinner(null);
-                      setWinnerPosition(null);
-                      setWinnerImageUrl("");
+        {is_competition && (
+          <Dialog open={isWinnerDialogOpen} onOpenChange={setIsWinnerDialogOpen}>
+            <DialogContent className="sm:max-w-[500px]">
+              <DialogHeader>
+                <DialogTitle>Add Competition Winner</DialogTitle>
+                <DialogDescription>Select a team and position to add as a winner</DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4 py-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Select Team</label>
+                  <Select
+                    value={selectedWinner?.id?.toString()}
+                    onValueChange={(value) => {
+                      const winner = filteredResponses.find((r) => r.id.toString() === value);
+                      setSelectedWinner(winner);
                     }}
                   >
-                    Cancel
-                  </Button>
-                  <Button onClick={addWinner} disabled={!selectedWinner || !winnerPosition}>
-                    <Trophy className="h-4 w-4 mr-2" />
-                    Add Winner
-                  </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
-          )}
-        </div>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Choose a team..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {filteredResponses
+                        .filter(
+                          (r) => r.status === true && !winners.some((w) => w.response_id === r.id),
+                        )
+                        .map((response) => (
+                          <SelectItem key={response.id} value={response.id.toString()}>
+                            {response.team_name} - {response.member_one_name}
+                          </SelectItem>
+                        ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Position</label>
+                  <Select
+                    value={winnerPosition?.toString()}
+                    onValueChange={(value) => setWinnerPosition(parseInt(value))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select position..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="1">
+                        <div className="flex items-center gap-2">
+                          <Trophy className="h-4 w-4 text-yellow-500" />
+                          1st Place
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="2">
+                        <div className="flex items-center gap-2">
+                          <Medal className="h-4 w-4 text-gray-400" />
+                          2nd Place
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="3">
+                        <div className="flex items-center gap-2">
+                          <Award className="h-4 w-4 text-amber-700" />
+                          3rd Place
+                        </div>
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Image URL (Optional)</label>
+                  <Input
+                    placeholder="https://example.com/image.jpg"
+                    value={winnerImageUrl}
+                    onChange={(e) => setWinnerImageUrl(e.target.value)}
+                  />
+                </div>
+
+                {selectedWinner && (
+                  <Card className="bg-muted/50">
+                    <CardContent className="pt-4">
+                      <p className="text-sm font-medium mb-2">Selected Team:</p>
+                      <div className="text-sm space-y-1">
+                        <p className="font-semibold">{selectedWinner.team_name}</p>
+                        <p className="text-muted-foreground">
+                          {selectedWinner.member_one_name} & {selectedWinner.member_two_name}
+                        </p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
+              <DialogFooter>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setIsWinnerDialogOpen(false);
+                    setSelectedWinner(null);
+                    setWinnerPosition(null);
+                    setWinnerImageUrl("");
+                  }}
+                >
+                  Cancel
+                </Button>
+                <Button onClick={addWinner} disabled={!selectedWinner || !winnerPosition}>
+                  <Trophy className="h-4 w-4 mr-2" />
+                  Add Winner
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        )}
+      </div>
       <div className="fixed left-[-9999px] top-[-9999px]">
         {currentCertificate && <Certificate ref={certificateRef} {...currentCertificate} />}
       </div>

@@ -61,4 +61,3 @@ export function useDashboardDataQuery() {
     staleTime: 1000 * 60 * 2,
   });
 }
-

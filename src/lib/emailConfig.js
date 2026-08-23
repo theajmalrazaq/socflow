@@ -6,7 +6,6 @@ export const DEFAULT_EMAIL_CONFIG = {
   senderName: "",
   logoUrl: "",
   bannerUrl: "",
-  websiteUrl: "",
   supportEmail: "",
   primaryColor: "#2A43F8",
   buttonTextColor: "#FFFFFF",
@@ -17,7 +16,6 @@ export const DEFAULT_EMAIL_CONFIG = {
   borderColor: "#E4E4E7",
   instagramUrl: "",
   linkedinUrl: "",
-  twitterUrl: "",
   footerCopyright: "",
   footerDisclaimer: "",
 };
@@ -129,16 +127,14 @@ export function buildSocietyEmailConfig(soc = null, customSettings = {}) {
     primaryColor: soc?.branding_color || "#2A43F8",
     instagramUrl: soc?.instagram_url || "",
     linkedinUrl: soc?.linkedin_url || "",
-    websiteUrl: soc?.website_url || "",
     supportEmail: email,
-    twitterUrl: customSettings.twitterUrl || "",
     footerCopyright: name
       ? `© ${year} ${name}. All rights reserved.`
       : `© ${year} Society. All rights reserved.`,
     footerDisclaimer: name
-      ? (email
-          ? `This is an automated email sent by the ${name} management system. If you find any mistake, please report at ${email}.`
-          : `This is an automated email sent by the ${name} management system.`)
+      ? email
+        ? `This email was sent by ${name}. For questions, contact ${email}.`
+        : `This email was sent by ${name}.`
       : "",
     ...customSettings,
     // Always preserve real society core details from DB
@@ -149,7 +145,6 @@ export function buildSocietyEmailConfig(soc = null, customSettings = {}) {
     ...(soc?.branding_color ? { primaryColor: soc.branding_color } : {}),
     ...(soc?.instagram_url ? { instagramUrl: soc.instagram_url } : {}),
     ...(soc?.linkedin_url ? { linkedinUrl: soc.linkedin_url } : {}),
-    ...(soc?.website_url ? { websiteUrl: soc.website_url } : {}),
   };
 }
 
@@ -174,7 +169,7 @@ export async function fetchEmailConfigFromDB() {
       .eq("key", STORAGE_KEY)
       .maybeSingle();
 
-    const savedConfig = (!settingsError && settingsData?.value) ? settingsData.value : {};
+    const savedConfig = !settingsError && settingsData?.value ? settingsData.value : {};
 
     activeDbConfig = buildSocietyEmailConfig(soc, savedConfig);
 

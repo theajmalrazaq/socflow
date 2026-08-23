@@ -17,4 +17,3 @@ export const useMemberStore = create((set) => ({
   setResponseToView: (responseToView) => set({ responseToView }),
   setResponseToDelete: (responseToDelete) => set({ responseToDelete }),
 }));
-

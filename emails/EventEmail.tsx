@@ -45,7 +45,6 @@ export const EventEmail = ({
   config = {},
 }: EventEmailProps) => {
   const cfg = { ...DEFAULT_EMAIL_CONFIG, ...config };
-  const baseUrl = cfg.websiteUrl || "#";
 
   return (
     <Html>
@@ -151,29 +150,12 @@ export const EventEmail = ({
                         color: cfg.buttonTextColor || "#ffffff",
                         borderRadius: "8px",
                       }}
-                      href={registrationLink || baseUrl}
+                      href={registrationLink || "#"}
                     >
                       {isCompetition ? "Register for Competition" : "Register Now"}
                     </Button>
                   </Column>
                 </Row>
-                {cfg.websiteUrl && (
-                  <Row>
-                    <Column align="left">
-                      <Button
-                        className="w-full block text-sm border border-zinc-200 border-solid py-[12px] text-center font-semibold"
-                        style={{
-                          backgroundColor: "#ffffff",
-                          color: cfg.textColor || "#18181b",
-                          borderRadius: "8px",
-                        }}
-                        href={baseUrl}
-                      >
-                        Visit Website
-                      </Button>
-                    </Column>
-                  </Row>
-                )}
               </Section>
 
               <Hr className="border-border m-0" />
@@ -206,14 +188,14 @@ export const EventEmail = ({
               )}
 
               {/* Footer */}
-              <Section className="p-8 text-left">
-                {(cfg.instagramUrl || cfg.linkedinUrl || cfg.twitterUrl || cfg.websiteUrl) && (
-                  <Row className="mb-6">
+              <Section className="p-8 text-left border-t border-border">
+                {(cfg.instagramUrl || cfg.linkedinUrl) && (
+                  <Row className="mb-4">
                     <Column>
                       {cfg.instagramUrl && (
                         <Link
                           href={cfg.instagramUrl}
-                          className="text-sm text-muted-foreground hover:text-foreground no-underline mr-6"
+                          className="text-xs font-medium text-muted-foreground hover:text-foreground no-underline mr-4"
                         >
                           Instagram
                         </Link>
@@ -221,53 +203,25 @@ export const EventEmail = ({
                       {cfg.linkedinUrl && (
                         <Link
                           href={cfg.linkedinUrl}
-                          className="text-sm text-muted-foreground hover:text-foreground no-underline mr-6"
+                          className="text-xs font-medium text-muted-foreground hover:text-foreground no-underline"
                         >
                           LinkedIn
-                        </Link>
-                      )}
-                      {cfg.twitterUrl && (
-                        <Link
-                          href={cfg.twitterUrl}
-                          className="text-sm text-muted-foreground hover:text-foreground no-underline mr-6"
-                        >
-                          Twitter / X
-                        </Link>
-                      )}
-                      {cfg.websiteUrl && (
-                        <Link
-                          href={baseUrl}
-                          className="text-sm text-muted-foreground hover:text-foreground no-underline"
-                        >
-                          Website
                         </Link>
                       )}
                     </Column>
                   </Row>
                 )}
 
-                <Text className="text-xs text-muted-foreground m-0 text-left">
+                <Text className="text-xs text-muted-foreground m-0 leading-5 text-left">
+                  {cfg.footerDisclaimer || (cfg.brandName ? `This email was sent by ${cfg.brandName}.` : "This is an automated communication.")}
+                </Text>
+
+                <Text className="text-[11px] text-muted-foreground m-0 mt-3 text-left">
                   {cfg.footerCopyright || `© ${new Date().getFullYear()} ${cfg.brandName || "Society"}. All rights reserved.`}
                 </Text>
 
-                <Text className="text-xs text-muted-foreground mt-2 text-left">
-                  {cfg.footerDisclaimer ||
-                    (cfg.supportEmail
-                      ? `This is an automated email sent by the ${cfg.brandName || "Society"} management system. If you find any mistake, please report at ${cfg.supportEmail}.`
-                      : `This is an automated email sent by the ${cfg.brandName || "Society"} management system.`)}
-                </Text>
-
-                {cfg.supportEmail && (
-                  <Text className="text-xs text-muted-foreground mt-1 text-left">
-                    Contact:{" "}
-                    <Link href={`mailto:${cfg.supportEmail}`} className="text-foreground underline">
-                      {cfg.supportEmail}
-                    </Link>
-                  </Text>
-                )}
-
                 {/* Powered by Socflow */}
-                <Text className="text-xs text-muted-foreground mt-4 pt-3 border-t border-border text-left">
+                <Text className="text-[11px] text-muted-foreground mt-4 pt-3 border-t border-border text-left">
                   Powered by{" "}
                   <Link
                     href="https://socflow.app"

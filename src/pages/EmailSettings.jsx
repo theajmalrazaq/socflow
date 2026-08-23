@@ -971,32 +971,17 @@ export function EmailSettings() {
                       />
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <div className="space-y-1.5">
-                        <Label htmlFor="websiteUrl" className="text-xs font-semibold">
-                          Website URL
-                        </Label>
-                        <Input
-                          id="websiteUrl"
-                          value={formData.websiteUrl}
-                          onChange={(e) => handleChange("websiteUrl", e.target.value)}
-                          placeholder="https://your-society-website.org"
-                          className="h-10 text-xs"
-                        />
-                      </div>
-
-                      <div className="space-y-1.5">
-                        <Label htmlFor="supportEmail" className="text-xs font-semibold">
-                          Support / Reply-To Email
-                        </Label>
-                        <Input
-                          id="supportEmail"
-                          value={formData.supportEmail}
-                          onChange={(e) => handleChange("supportEmail", e.target.value)}
-                          placeholder="support@domain.org or contact@domain.org"
-                          className="h-10 text-xs"
-                        />
-                      </div>
+                    <div className="space-y-1.5">
+                      <Label htmlFor="supportEmail" className="text-xs font-semibold">
+                        Support / Reply-To Email
+                      </Label>
+                      <Input
+                        id="supportEmail"
+                        value={formData.supportEmail}
+                        onChange={(e) => handleChange("supportEmail", e.target.value)}
+                        placeholder="support@domain.org or contact@domain.org"
+                        className="h-10 text-xs"
+                      />
                     </div>
                   </CardContent>
                 </Card>
@@ -1160,19 +1145,6 @@ export function EmailSettings() {
                         className="h-10 text-xs"
                       />
                     </div>
-
-                    <div className="space-y-1.5">
-                      <Label htmlFor="twitterUrl" className="text-xs font-semibold">
-                        Twitter / X URL
-                      </Label>
-                      <Input
-                        id="twitterUrl"
-                        value={formData.twitterUrl}
-                        onChange={(e) => handleChange("twitterUrl", e.target.value)}
-                        placeholder="https://x.com/your_handle"
-                        className="h-10 text-xs"
-                      />
-                    </div>
                   </CardContent>
                 </Card>
               </TabsContent>
@@ -1185,8 +1157,7 @@ export function EmailSettings() {
                       Footer Information & Disclaimers
                     </CardTitle>
                     <CardDescription className="text-xs">
-                      Customize copyright statement, automated disclaimers, and optional developer
-                      credit.
+                      Customize copyright statement and automated email disclaimers.
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4 text-left">
@@ -1211,56 +1182,11 @@ export function EmailSettings() {
                         id="footerDisclaimer"
                         value={formData.footerDisclaimer}
                         onChange={(e) => handleChange("footerDisclaimer", e.target.value)}
-                        placeholder={`This is an automated email sent by the ${societyData.name || "Society"} management system. If you find any mistake, please report at ${societyData.email || "our official email"}.`}
+                        placeholder={`This email was sent by ${societyData.name || "Society"}. For questions, contact ${societyData.email || "our official email"}.`}
                         rows={2}
                         className="text-xs"
                       />
                     </div>
-
-                    <div className="flex items-center justify-between pt-2 border-t border-border/50">
-                      <div className="space-y-0.5">
-                        <Label className="text-xs font-semibold">
-                          Show Creator Credit in Footer
-                        </Label>
-                        <p className="text-[11px] text-muted-foreground">
-                          Display "Crafted with ♥ by ..." at bottom
-                        </p>
-                      </div>
-                      <Switch
-                        checked={formData.showCreatorCredit}
-                        onCheckedChange={(checked) => handleChange("showCreatorCredit", checked)}
-                      />
-                    </div>
-
-                    {formData.showCreatorCredit && (
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
-                        <div className="space-y-1.5">
-                          <Label htmlFor="creatorName" className="text-xs font-semibold">
-                            Creator Name
-                          </Label>
-                          <Input
-                            id="creatorName"
-                            value={formData.creatorName}
-                            onChange={(e) => handleChange("creatorName", e.target.value)}
-                            placeholder="Enter developer or creator name"
-                            className="h-9 text-xs"
-                          />
-                        </div>
-
-                        <div className="space-y-1.5">
-                          <Label htmlFor="creatorLink" className="text-xs font-semibold">
-                            Creator Profile Link
-                          </Label>
-                          <Input
-                            id="creatorLink"
-                            value={formData.creatorLink}
-                            onChange={(e) => handleChange("creatorLink", e.target.value)}
-                            placeholder="https://linkedin.com/in/profile-url"
-                            className="h-9 text-xs"
-                          />
-                        </div>
-                      </div>
-                    )}
                   </CardContent>
                 </Card>
               </TabsContent>

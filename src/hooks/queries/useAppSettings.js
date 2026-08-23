@@ -18,12 +18,14 @@ export function useAppSettingsQuery() {
           upcomingeventstatus: true,
         };
       }
-      return data || {
-        id: null,
-        induction: true,
-        upcomingevent: false,
-        upcomingeventstatus: true,
-      };
+      return (
+        data || {
+          id: null,
+          induction: true,
+          upcomingevent: false,
+          upcomingeventstatus: true,
+        }
+      );
     },
     staleTime: 1000 * 60 * 5,
   });

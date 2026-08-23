@@ -4,8 +4,7 @@ import { getEmailConfig } from "@/lib/emailConfig";
 
 export const Certificate = forwardRef(
   ({ name, eventName, date, code, type, position, societyName }, ref) => {
-    const activeSocietyName =
-      societyName || getEmailConfig().brandName || "Society";
+    const activeSocietyName = societyName || getEmailConfig().brandName || "Society";
 
     return (
       <div

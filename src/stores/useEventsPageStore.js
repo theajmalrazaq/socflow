@@ -79,4 +79,3 @@ export const useEventsPageStore = create((set) => ({
       createLoading: false,
     }),
 }));
-
